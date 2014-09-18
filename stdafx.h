@@ -1,0 +1,25 @@
+#ifndef _STDAFX_
+#define _STDAFX_
+#include <google\dense_hash_map>
+#include <map>
+#include <exception>
+#include <vector>
+#include <glew.h>
+#define GLFW_DLL
+#include <glfw3.h>
+#include <string>
+#include <algorithm>
+#include <iostream>
+#include <stdlib.h>
+#include <fstream>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <chrono>
+#include <queue>
+#include <Soil\SOIL.h>
+#include <glm\glm\glm.hpp>
+#include <glm\glm\gtc\matrix_transform.hpp>
+#include <glm\glm\gtc\noise.hpp>
+#include <glm\glm\gtc\type_ptr.hpp>
+#endif
