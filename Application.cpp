@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "Application.h"
 
-
+namespace XKS {
 using namespace std;
 
 Application* Application::m_instance = nullptr;
@@ -95,4 +95,6 @@ void Application::KeyAction(int key, int scancode, int action, int mods)
 void Application::MouseAction(int button, int action, int mods)
 {
 	
+}
+
 }

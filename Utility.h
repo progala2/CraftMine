@@ -4,9 +4,9 @@
 
 struct HashVector;
 
-typedef GLushort TextureTypeNumber;
+typedef GLushort BlockTypeNumber;
 typedef glm::detail::tvec3<GLubyte, glm::precision::defaultp> Vec3ub;
-typedef glm::detail::tvec2<TextureTypeNumber, glm::precision::defaultp> Vec2us;
+typedef glm::detail::tvec2<BlockTypeNumber, glm::precision::defaultp> Vec2us;
 
 struct Vec2ub{
 	Vec2ub(GLubyte _x, GLubyte _y, GLubyte _z)
@@ -23,8 +23,8 @@ bool operator<(const Vec2ub& a, const Vec2ub& b);
 
 
 
-typedef google::dense_hash_map <Vec2ub, TextureTypeNumber, HashVector, std::equal_to<Vec2ub>, 
-	std::allocator<std::pair<const Vec2ub, TextureTypeNumber > > > ChunkData;
+typedef google::dense_hash_map <Vec2ub, BlockTypeNumber, HashVector, std::equal_to<Vec2ub>, 
+	std::allocator<std::pair<const Vec2ub, BlockTypeNumber > > > ChunkData;
 
 struct HashVector
 {

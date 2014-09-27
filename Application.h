@@ -7,6 +7,8 @@
 #include "Camera.h"
 #include "ResourceManager.h"
 
+namespace XKS {
+
 class World;
 class Application : public OpenGLAppBase
 {
@@ -44,5 +46,7 @@ private:
 
 	GLboolean m_isFocused;
 };
+
+}
 
 #endif

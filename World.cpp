@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "World.h"
 
-//extern ResourceManager* resourceManager;
+namespace XKS {
 
 World::~World()
 {
@@ -28,9 +28,9 @@ void World::GenerateWorld(std::pair<const glm::ivec3, Chunk*>& chunk )
 		{
 			glm::vec3 pos2(pos.x + x, pos.z + z, t);
 			pos2 *= (s + r) * (p + t);
-			int max = 40 + int(75*glm::perlin(pos2));
+			int max = 20 + int(75*glm::perlin(pos2));
 			pos2.z = s;
-			TextureTypeNumber block = TextureTypeNumber(4 * glm::perlin(pos2));
+			BlockTypeNumber block = BlockTypeNumber(4 * glm::perlin(pos2));
 			for(GLubyte y = 0; y < max; ++y)
 			{	
 				chunk.second->Set(x, y, z, block);		
@@ -66,7 +66,7 @@ void World::Load()
 	m_texturesID = resourceManager->getTextureArrID();
 
 	m_player = new Player(glm::vec3(0, 84, 0));
-	m_player->setDelOnMove(DelegatePlayerOnMove::from_method<World, &World::onPlayerMove>(const_cast<World*>(this)));
+	m_player->setDelOnMove(DelegateCreatureOnMove::from_method<World, &World::onCreatureMove>(const_cast<World*>(this)));
 
 	glm::ivec3 a;
 	a.y = 0;
@@ -124,8 +124,6 @@ void World::Load()
 		m_threadBuilding[i] = new std::thread([this] {
 			for(;;)
 			{
-				
-				double time = glfwGetTime();
 				while(m_chunksBuildingQueue.Size() != 0){
 					auto obj = m_chunksBuildingQueue.Remove(); 
 					GenerateWorld(obj);
@@ -136,15 +134,16 @@ void World::Load()
 					obj->UpdateVertexes();
 					m_chunkTransferQueue.Add(obj);
 				}
-				std::this_thread::sleep_for(std::chrono::duration<int>(1));
+				std::this_thread::sleep_for(std::chrono::microseconds(1));
 			}
-			
+
 	});
 	for(int i = 0; i < 3; ++i)
 	{
 		m_threadBuilding[i]->detach();
 	}
 	printf(" %Lf s", glfwGetTime()-time);
+	std::this_thread::sleep_for(std::chrono::duration<int>(1));
 }
 
 void World::Unload()
@@ -162,9 +161,9 @@ void World::Unload()
 void World::Update(double dt)
 {
 	while(m_chunkTransferQueue.Size() > 0){
-			Chunk* obj = m_chunkTransferQueue.Remove();
-			obj->MoveToGraphic();
-		}
+		Chunk* obj = m_chunkTransferQueue.Remove();
+		obj->MoveToGraphic();
+	}
 	for(auto it = m_chunks.begin(); it != m_chunks.end(); ++it)
 		if(it->second->isModified()) m_chunkUpdateQueue.Add(it->second);
 
@@ -223,21 +222,84 @@ void World::Draw()
 	glBindVertexArray(0);
 }
 
-void World::onPlayerMove(DelegatePlayerOnMoveData info)
+void World::onCreatureMove(const DelegateCreatureOnMoveData& info)
 {
-	glm::vec3 newPos = m_player->getPosition();
-	glm::vec3& oldPos = std::get<1>(info);
-	glm::ivec3 chunkPos = transformPositionToChunk(newPos);
-	glm::ivec3 blockPos = transformPositionToBlock(newPos);
+	glm::vec3 newPos(m_player->getPosition());
+	glm::vec3 vel(m_player->getVelocity());
+	glm::vec3 force(m_player->getForce());
+	GLfloat speed(m_player->getSpeed());
 
-	if(m_chunks.find(chunkPos) != m_chunks.end() && m_chunks[chunkPos]->isSolid(blockPos.x, blockPos.y+1, blockPos.z))
-	{
-		if(!m_chunks[chunkPos]->isSolid(blockPos.x, blockPos.y+2, blockPos.z))
-			m_player->setForce(glm::vec3(0, 0, 0)); 
-		m_player->setVelocity(glm::vec3(0, 0, 0));
-		m_player->setPosition(oldPos);
-	}else
-	{
-		m_player->setForce(glm::vec3(0, -m_gravityAcceleration, 0)); 
+	if (newPos.y < 0) {
+		newPos.y = 0;
+		vel.y = 0;
 	}
+
+	glm::vec3 tmpPos = newPos, newPos2 = newPos;	
+	glm::vec3 oldPos = info.oldPos;
+	glm::vec3 vec(newPos - oldPos);
+	
+
+	if (vec.x < 0 || vec.x > 0) {
+		if (vec.x < 0)
+			tmpPos.x -= 0.5f;
+		else 
+			tmpPos.x += 0.5f;
+		glm::ivec3 chunkPos = transformPositionToChunk(tmpPos);
+		glm::ivec3 blockPos = transformPositionToBlock(tmpPos);
+		if(m_chunks.find(chunkPos) != m_chunks.end()) {
+			if (m_chunks[chunkPos]->isSolid(blockPos.x, blockPos.y, blockPos.z)) {
+				vel.x = 0;
+				newPos2.x = oldPos.x;
+			}
+		}
+	}
+	tmpPos = newPos2;
+	if (vec.z < 0 || vec.z > 0) {
+		if (vec.z < 0)
+			tmpPos.z -= 0.5f;
+		else 
+			tmpPos.z += 0.5f;
+		glm::ivec3 chunkPos = transformPositionToChunk(tmpPos);
+		glm::ivec3 blockPos = transformPositionToBlock(tmpPos);
+		if (m_chunks.find(chunkPos) != m_chunks.end()) {
+			if (m_chunks[chunkPos]->isSolid(blockPos.x, blockPos.y, blockPos.z)) {
+				vel.z = 0;
+				newPos2.z = oldPos.z;
+			}
+		}
+	}
+	tmpPos = newPos2;
+	if (vec.y < 0 || vec.y > 0) {
+		if (vec.y < 0)
+			tmpPos.y -= 1;
+		else 
+			tmpPos.y += 0.2f;
+		glm::ivec3 chunkPos = transformPositionToChunk(tmpPos);
+		glm::ivec3 blockPos = transformPositionToBlock(tmpPos);
+		if (m_chunks.find(chunkPos) != m_chunks.end()) {
+			if (m_chunks[chunkPos]->isSolid(blockPos.x, blockPos.y, blockPos.z)) {
+				vel.y = 0;
+				newPos2.y = oldPos.y;
+			} else
+				force.y = -m_gravityAcceleration;
+		} else
+			force.y = -m_gravityAcceleration;
+	} else
+		force.y = -m_gravityAcceleration;
+
+	float len = glm::length(vel);
+	if (vel != glm::vec3(0, 0, 0)) {
+		glm::vec3 normForce(glm::normalize(vel));
+		force -= normForce * len * len * 0.5f * 0.1f * 1.2f;
+		if (!vel.y) {
+			force.x -= glm::min(normForce.x * 1.0f, vel.x);
+			force.z -= glm::min(normForce.z * 1.0f, vel.z);
+		}
+	}
+	
+	m_player->setVelocity(vel);
+	m_player->setPosition(newPos2);
+	m_player->setForce(force);
+}
+
 }

@@ -42,7 +42,7 @@
 		void LoadChunkData(ChunkData& data);
 
 		void SetNeighbour(DIRECTIONS flag, Chunk* obj);
-		void Set(GLubyte x, GLubyte y, GLubyte z, TextureTypeNumber tex);
+		void Set(GLubyte x, GLubyte y, GLubyte z, BlockTypeNumber tex);
 		void Delete(GLubyte x, GLubyte y, GLubyte z);
 		void ChunkModified () {m_modified = true;}
 		void SetFacesToDraw(GLubyte flag) {m_facesToDraw = flag;}
@@ -52,7 +52,7 @@
 
 		void Draw();
 
-		void AddFace(GLubyte x, GLubyte y, GLubyte z, GLubyte flag, TextureTypeNumber tex[6]);
+		void AddFace(GLubyte x, GLubyte y, GLubyte z, GLubyte flag, BlockTypeNumber tex[6]);
 
 		static const glm::ivec3 ms_chunkSize;
 		

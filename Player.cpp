@@ -2,7 +2,9 @@
 #include "Player.h"
 #include "Application.h"
 
-Player::Player(glm::vec3 pos):Creature(), m_position(pos), m_speed(10.0f), m_force(0,0,0), m_velocity(0,0,0)
+namespace XKS {
+
+Player::Player(glm::vec3 pos):Creature(pos)
 { 
 	m_camera = new Camera(pos, 45.0f);
 	m_camera->m_pos.y += 2;	
@@ -23,14 +25,8 @@ void Player::Update(double dt)
 	application->GetWindowWidthHeight(width, height);
 	application->SetCursorPos( width/2, height/2);
 
-	if(m_position.y < 0)
-	{
-		m_position.y = 0;
-		m_velocity.y = 0;
-	}else
-	{
-		m_velocity += m_force*float(dt);
-	}
+	m_velocity += m_force * float(dt);
+	m_force = glm::vec3(0, 0, 0);
 
 	// Compute new orientation
 	m_camera->m_hAngle += mouseSpeed * float(dt * (width/2 - xpos ));
@@ -46,46 +42,38 @@ void Player::Update(double dt)
 	if (application->GetKey(GLFW_KEY_SPACE ) == GLFW_PRESS && m_velocity.y == 0){
 		m_velocity.y = 15.0f;
 	}
-	// Move backward
-	/*if (application->GetKey(GLFW_KEY_LEFT_SHIFT ) == GLFW_PRESS){
-		newPos += glm::vec3(0, -1, 0) * float(dt * m_speed);
-	}*/
+
 	direction.y = 0;
 	direction = glm::normalize(direction);
-	if (application->GetKey(GLFW_KEY_UP ) == GLFW_PRESS){
-		newPos += direction * float(dt * m_speed);
+	if (application->GetKey(GLFW_KEY_UP ) == GLFW_PRESS) {
+		m_force += direction * m_speed;
 	}
 	// Move backward
-	else if (application->GetKey(GLFW_KEY_DOWN ) == GLFW_PRESS){
-		newPos -= direction * float(dt * m_speed);
+	else if (application->GetKey(GLFW_KEY_DOWN ) == GLFW_PRESS) {
+		m_force -= direction * m_speed;
 	}
 	// Strafe right
 	if (application->GetKey(GLFW_KEY_RIGHT ) == GLFW_PRESS){
-		newPos += right * float(dt * m_speed);
+		m_force += right * m_speed;
+	}else if (application->GetKey(GLFW_KEY_LEFT ) == GLFW_PRESS) {
+		m_force -= right * m_speed;
 	}
-	// Strafe left
-	if (application->GetKey(GLFW_KEY_LEFT ) == GLFW_PRESS){
-		newPos -= right * float(dt * m_speed);
-	}
-	if (application->GetKey(GLFW_KEY_1 ) == GLFW_PRESS){
+	if (application->GetKey(GLFW_KEY_1 ) == GLFW_PRESS) {
 		printf("\n%f %f %f \n", m_camera->m_dir.x, m_camera->m_dir.y, m_camera->m_dir.z);
 	}
-	if (application->GetKey(GLFW_KEY_2 ) == GLFW_PRESS){
+	if (application->GetKey(GLFW_KEY_2 ) == GLFW_PRESS) {
 		printf("\n%f %f %f \n", m_camera->m_pos.x, m_camera->m_pos.y, m_camera->m_pos.z);
 	}
 
 	newPos += m_velocity * float(dt);
+	m_position += newPos;
 	
-	this->setPosition(m_position + newPos);
-
-	m_delegateOnMove(std::make_tuple(this, m_position - newPos));
-	if (application->GetKey(GLFW_KEY_3) == GLFW_PRESS)
-	{
-		setForce(glm::vec3(0, -9.83f, 0));
-	}
+	m_delegateOnMove(DelegateCreatureOnMoveData(this, dt, m_position - newPos));
 }
 
 void Player::Draw()
 {
 
 }
+
+} //nmspc XKS

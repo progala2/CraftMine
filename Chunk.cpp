@@ -108,7 +108,7 @@ void Chunk::SetNeighbour(DIRECTIONS flag, Chunk* obj)
 	m_Neighbours[flag] = obj;
 }
 
-void Chunk::Set(GLubyte x, GLubyte y, GLubyte z, TextureTypeNumber tex)
+void Chunk::Set(GLubyte x, GLubyte y, GLubyte z, BlockTypeNumber tex)
 {
 	m_chunkData[Vec2ub(x,y,z)] = tex;
 }
@@ -141,7 +141,7 @@ void Chunk::UpdateVertexes()
 	for(auto it = m_chunkData.begin(); it!=end; ++it)
 	{
 		GLubyte fl = VSBL_FCS_NOTHING;
-		TextureTypeNumber tex[6];
+		BlockTypeNumber tex[6];
 		GLubyte z = it->first.xz >> 4;
 		GLubyte x = it->first.xz - (z<<4), y = it->first.y;
 
@@ -231,7 +231,7 @@ bool Chunk::isSolid(GLubyte x, GLubyte y, GLubyte z) const
 	return m_chunkData.find(Vec2ub(x,y,z)) != m_chunkData.end();
 }
 
-void Chunk::AddFace(GLubyte x, GLubyte y, GLubyte z, GLubyte flag, TextureTypeNumber tex[6])
+void Chunk::AddFace(GLubyte x, GLubyte y, GLubyte z, GLubyte flag, BlockTypeNumber tex[6])
 {
 	GLubyte x1 = x+1, y1 = y+1, z1 = z+1;
 	if(flag & VSBL_FCS_FRONT)

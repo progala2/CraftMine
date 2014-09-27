@@ -3,7 +3,7 @@
 
 int main()
 {
-	Application* appl = Application::getInstance();
+	XKS::Application* appl = XKS::Application::getInstance();
 	appl->Run();
 	delete appl;
 	return 0;
