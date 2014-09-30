@@ -10,41 +10,50 @@
 namespace XKS {
 
 class World;
-class Application : public OpenGLAppBase
-{
-public:
-	
-	static Application* getInstance();
+class Application : public OpenGLAppBase {
+ public:
 
-	virtual void Resize(int width, int height);
-	virtual void Draw();
-	virtual void Load();
-	virtual void Unload();
-	//Dodana metoda Update
-	virtual void Update(double dt);
-	virtual void Focus(int foc) { m_isFocused = foc;}
+    static Application* getInstance();
 
-	virtual void KeyAction(int key, int scancode, int action, int mods);
-	virtual void MouseAction(int button, int action, int mods);
+    virtual void Resize(int width, int height);
+    virtual void Draw();
+    virtual void Load();
+    virtual void Unload();
+    //Dodana metoda Update
+    virtual void Update(double dt);
+    virtual void Focus(int foc) {
+        m_isFocused = foc;
+    }
 
-	float GetMouseSpeed() const {return m_mouseSpeed;}
-	float GetClippingDistance() const {return m_clippingDistance;}
-	float GetAspect() const {return m_aspect;}
-	float GetFoV() const {return m_FoV;}
+    virtual void KeyAction(int key, int scancode, int action, int mods);
+    virtual void MouseAction(int button, int action, int mods);
 
-	~Application();
+    float GetMouseSpeed() const {
+        return m_mouseSpeed;
+    }
+    float GetClippingDistance() const {
+        return m_clippingDistance;
+    }
+    float GetAspect() const {
+        return m_aspect;
+    }
+    float GetFoV() const {
+        return m_FoV;
+    }
 
-private:
+    virtual ~Application();
 
-	Application();
-	float m_mouseSpeed;
-	float m_clippingDistance, m_aspect, m_FoV;
+ private:
 
-	World* m_world;
+    Application();
+    float m_mouseSpeed;
+    float m_clippingDistance, m_aspect, m_FoV;
 
-	static Application* m_instance;
+    std::unique_ptr<World> m_world;
 
-	GLboolean m_isFocused;
+    static Application* m_instance;
+
+    GLboolean m_isFocused;
 };
 
 }

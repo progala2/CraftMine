@@ -1,0 +1,4 @@
+[Version 0.1.1]
+* Camera improvment, code formmating to one style and removing raw pointers.
+[Version 0.1]
+* First release!

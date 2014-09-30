@@ -11,48 +11,24 @@
 #include "Player.h"
 namespace XKS {
 
-	class World
-	{
-	public:
-		typedef std::map<glm::ivec3, Chunk*> ChunksMap;
-		typedef std::pair<const glm::ivec3, Chunk*> ChunksMapPair;
+class World {
+ public:
+    virtual void Load() = 0;
+    virtual void Unload() = 0;
+    virtual void Update(double dt) = 0;
+    virtual void Draw() = 0;
 
-		~World();
+    virtual ~World() {}
 
-		void Load();
-		void Unload();
-		void Update(double dt);
-		void Draw();
+    float getGravityAcceleration() const {
+        return m_gravityAcceleration;
+    }
 
-		void GenerateWorld(ChunksMapPair& chunk );
-		glm::ivec3 transformPositionToChunk(const glm::vec3& pos) const;
-		glm::ivec3 transformPositionToBlock(const glm::vec3& pos) const;
+    void onCreatureMove(const DelegateCreatureOnMoveData& info);
 
-		float getGravityAcceleration() const {return m_gravityAcceleration;}
-
-		void onCreatureMove(const DelegateCreatureOnMoveData& info);
-
-		void UpdateProjectionMatrix();
-
-		
-	private:
-
-		void MoveToGraphic();
-
-		CubeShader *m_program;
-
-		GLuint m_texturesID;
-		ChunksMap m_chunks;
-		Player* m_player;
-		glm::mat4 m_viewMatrix, m_projectionMatrix;
-		GLuint m_seed;
-		GLint m_distance;
-		std::thread* m_threadBuilding[3], *m_threadUpdate;
-		WQueue<Chunk*>  m_chunkUpdateQueue, m_chunkTransferQueue;
-		WQueue<ChunksMapPair> m_chunksBuildingQueue;
-
-		float m_gravityAcceleration;
-	};
+ protected:
+    float m_gravityAcceleration;
+};
 
 }
 #endif

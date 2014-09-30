@@ -7,21 +7,26 @@
 
 namespace XKS {
 
-class Player : public Creature
-{
-public:
-	Player(glm::vec3 pos = glm::vec3(0,0,0));
-	~Player();
+class Player : public Creature {
+ public:
+    Player(glm::vec3 pos = glm::vec3(0, 0, 0));
+    ~Player();
 
-	void Draw();
-	void Update(double dt);
+    void Draw();
+    void Update(double dt);
 
-	void setPosition(const glm::vec3& pos) { Creature::setPosition(pos); m_camera->m_pos = pos; m_camera->m_pos.y+=2; } 
+    void setPosition(const glm::vec3& pos) {
+        Creature::setPosition(pos);
+        m_camera->m_pos = pos;
+        m_camera->m_pos.y += 2;
+    }
 
-	Camera* getCamera() const { return m_camera; }
+    Camera* getCamera() const {
+        return m_camera;
+    }
 
-private:
-	Camera* m_camera;
+ private:
+    std::unique_ptr<Camera> m_camera;
 };
 
 }

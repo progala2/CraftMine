@@ -5,6 +5,8 @@
 #include "stdafx.h"
 #include "VertexAttribDescription.h"
 
+namespace XKS {
+
 struct VertexPositionColor
 {
 public:
@@ -50,4 +52,5 @@ public:
 	static const VertexAttribDescription Attributes[AttributesCount];
 };
 
+}
 #endif

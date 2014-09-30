@@ -3,31 +3,37 @@
 
 #include "stdafx.h"
 
-	struct Camera
-	{
-		// position
-		glm::vec3 m_pos, m_dir;
-		// horizontal angle
-		float m_hAngle;
-		// vertical angle
-		float m_vAngle;
-		// Initial Field of View
-		float m_FoV;		
+namespace XKS {
+class Camera {
+    // position
+    glm::vec3 m_pos, m_dir, m_right, m_up;
+    glm::mat4 m_lookAt;
+ public:
+    Camera(const glm::vec3& pos, float FoV)
+            : m_pos(pos) {
+        Update(m_pos, -1, -1, FoV);
+    }
 
-		Camera(glm::vec3 pos, float FoV): m_pos(pos), m_hAngle(-1.f), m_vAngle(-1.f),
-			m_FoV(FoV) { m_dir = GetDirection();}
+    void Update(const glm::vec3& pos, float hAngle, float vAngle, float fov);
 
-		glm::vec3 GetDirection() const { return glm::vec3(cos(m_vAngle) * sin(m_hAngle),
-															sin(m_vAngle),
-															cos(m_vAngle) * cos(m_hAngle)
-															); }
-		glm::vec3 GetRightVec() const { return glm::vec3(sin(m_hAngle - 3.14f*0.5f),
-															0,
-															cos(m_hAngle - 3.14f*0.5f)
-															); }
-		glm::vec3 GetUpVec() const {return glm::cross( GetRightVec(), GetDirection() ); }
+    const glm::vec3& GetDirection() const {
+        return m_dir;
+    }
+    const glm::vec3& GetRightVec() const {
+        return m_right;
+    }
+    const glm::vec3& GetUpVec() const {
+        return m_up;
+    }
 
-		glm::mat4 LookAt() const {return glm::lookAt(m_pos, m_pos + m_dir, GetUpVec()); }
-	};
+    const glm::mat4& LookAt() const {
+        return m_lookAt;
+    }
+
+    const glm::vec3& GetPosition() const {
+        return m_pos;
+    }
+};
+}
 
 #endif

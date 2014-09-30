@@ -3,34 +3,38 @@
 
 #include "stdafx.h"
 
-enum BLOCKS
-{
-	BLCK_FIRST = 0,
-	BLCK_DIRT = BLCK_FIRST,
-	BLCK_COBBLESTONE,
-	BLCK_STONE,
-	BLCK_SAND,
-	BLCK_LAST = BLCK_SAND
+namespace XKS {
+
+enum BLOCKS {
+    BLCK_FIRST = 0,
+    BLCK_DIRT = BLCK_FIRST,
+    BLCK_COBBLESTONE,
+    BLCK_STONE,
+    BLCK_SAND,
+    BLCK_LAST = BLCK_SAND
 };
 
-class ResourceManager
-{
-public:
-	static ResourceManager* getInstance();
-	~ResourceManager();
+class ResourceManager {
+ public:
+    static ResourceManager* getInstance();
+    ~ResourceManager();
 
-	void Load();
-	void Unload();
-	GLuint getTextureArrID() {return m_texArrBlockID;}
+    void Load();
+    void Unload();
+    GLuint getTextureArrID() {
+        return m_texArrBlockID;
+    }
 
-private:
+ private:
 
-	ResourceManager();
-	GLuint m_texArrBlockID;
+    ResourceManager();
+    GLuint m_texArrBlockID;
 
-	GLuint loadTexture(const std::string& imagepath);
-	GLuint loadTextureArray(const std::vector<std::string> imagepath);
+    GLuint loadTexture(const std::string& imagepath);
+    GLuint loadTextureArray(const std::vector<std::string> imagepath);
 
-	static ResourceManager* m_instance;
+    static ResourceManager* m_instance;
 };
+
+}
 #endif

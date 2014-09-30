@@ -2,34 +2,36 @@
 #define _XKS_CONFIGMANAGER_H_
 #include "stdafx.h"
 
-struct TextureParameters
-{
-	GLint TextureMinFilter, TextureMagFilter, 
-		TextureWrapS/*GL_CLAMP_TO_EDGE*/,TextureWrapT;
+struct TextureParameters {
+    GLint TextureMinFilter, TextureMagFilter, TextureWrapS/*GL_CLAMP_TO_EDGE*/, TextureWrapT;
 };
 
-class ConfigManager
-{
-public:
+class ConfigManager {
+ public:
 
-	static ConfigManager* getInstance();
+    static ConfigManager* getInstance();
 
-	GLubyte getTextureComprType() {return m_compressedTex;}
-	GLboolean isGeneratingMipMap() {return m_genMipMap;}
-	const TextureParameters& getTextureParameters() {return m_texParameters;}
+    GLubyte getTextureComprType() {
+        return m_compressedTex;
+    }
+    GLboolean isGeneratingMipMap() {
+        return m_genMipMap;
+    }
+    const TextureParameters& getTextureParameters() {
+        return m_texParameters;
+    }
 
+ private:
+    ConfigManager();
 
-private:
-	ConfigManager();
+    GLubyte m_compressedTex;
+    GLboolean m_genMipMap;
+    TextureParameters m_texParameters;
 
-	GLubyte m_compressedTex;
-	GLboolean m_genMipMap;
-	TextureParameters m_texParameters;
+    float m_mouseSpeed;
+    float m_clippingDistance, m_FoV;
 
-	float m_mouseSpeed;
-	float m_clippingDistance, m_FoV;
-
-	static ConfigManager* ms_instance;
+    static ConfigManager* ms_instance;
 };
 
 #endif
