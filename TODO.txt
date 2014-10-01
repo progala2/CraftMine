@@ -1,7 +1,9 @@
 [High]
 * Create some kind of engine. In other words - seperate files system Graphics itp of Game logic.
 [Medium]
+* full kinds of managers like opengl manager itd.
 * ConfigManager - some kind of menu to better debugging
 * Removing Raw Pointers
+* Creating Screen interface - game, menu itp.'s base class.
 [Low]
 [Thinks]

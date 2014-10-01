@@ -9,7 +9,7 @@ struct TextureParameters {
 class ConfigManager {
  public:
 
-    static ConfigManager* getInstance();
+    static std::shared_ptr<ConfigManager> getInstance();
 
     GLubyte getTextureComprType() {
         return m_compressedTex;
@@ -22,16 +22,17 @@ class ConfigManager {
     }
 
  private:
+
     ConfigManager();
 
     GLubyte m_compressedTex;
     GLboolean m_genMipMap;
     TextureParameters m_texParameters;
 
-    float m_mouseSpeed;
-    float m_clippingDistance, m_FoV;
+    GLfloat m_mouseSpeed;
+    GLfloat m_clippingDistance, m_FoV;
 
-    static ConfigManager* ms_instance;
+    std::shared_ptr<ConfigManager> m_instance;
 };
 
 #endif

@@ -4,37 +4,37 @@
 namespace XKS {
 using namespace std;
 
-Application* Application::m_instance = nullptr;
+std::shared_ptr<Application> Application::m_instance(nullptr);
 
 Application::Application()
         : m_mouseSpeed(0.1f),
           m_world(nullptr),
+          m_resourceManager(nullptr),
           m_isFocused(GL_TRUE),
           m_clippingDistance(200.f),
           m_FoV(45.f) {
     m_aspect = m_windowWidth / static_cast<GLfloat>(m_windowHeight);
 }
 
-Application* Application::getInstance() {
+std::shared_ptr<Application> Application::getInstance() {
     if (m_instance == nullptr)
-        m_instance = new Application();
+        m_instance = std::make_shared<Application>();
 
     return m_instance;
 }
 
 Application::~Application() {
     Unload();
-    m_instance = nullptr;
 }
 
 void Application::Load() {
     glfwSwapInterval(0);
 
-    ResourceManager* resourceManager = ResourceManager::getInstance();
+    auto resourceManager = ResourceManager::GetInstance();
     resourceManager->Load();
     printf("ResourceManager Loaded");
 
-    m_world = new MineWorld();
+    m_world = std::make_shared<MineWorld>();
     m_world->Load();
     printf("World Loaded");
 
@@ -47,7 +47,6 @@ void Application::Load() {
 }
 
 void Application::Unload() {
-    delete ResourceManager::getInstance();
 }
 
 void Application::Draw() {

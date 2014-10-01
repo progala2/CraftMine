@@ -6,20 +6,16 @@ template<class ParamType>
 class Delegate {
  public:
     Delegate()
-            : object_ptr(0),
+            : object_ptr(nullptr),
               stub_ptr(0) {
     }
 
     template<class T, void (T::*TMethod)(const ParamType&)>
-    static Delegate<ParamType> from_method(T* object_ptr) {
+    static Delegate<ParamType> from_method(std::weak_ptr<T> object_ptr) {
         Delegate<ParamType> d;
         d.object_ptr = object_ptr;
         d.stub_ptr = &method_stub<T, TMethod>;  // #1
         return d;
-    }
-
-    void operator()(ParamType&& a1) const {
-        (*stub_ptr)(object_ptr, a1);
     }
 
     void operator()(const ParamType& a1) const {
@@ -27,15 +23,17 @@ class Delegate {
     }
 
  private:
-    typedef void (*stub_type)(void* object_ptr, const ParamType&);
+    typedef void (*stub_type)(std::weak_ptr<void> object_ptr, const ParamType&);
 
-    void* object_ptr;
+    std::weak_ptr<void> object_ptr;
     stub_type stub_ptr;
 
     template<class T, void (T::*TMethod)(const ParamType&)>
-    static void method_stub(void* object_ptr, const ParamType& a1) {
-        T* p = static_cast<T*>(object_ptr);
-        return (p->*TMethod)(a1);  // #2
+    static void method_stub(std::weak_ptr<void> object_ptr, const ParamType& a1) {
+        if(auto p = object_ptr.lock()) {
+            T* r = static_cast<T*>(p.get());
+            (r->*TMethod)(a1);  // #2
+        }
     }
 };
 

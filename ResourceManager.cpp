@@ -4,17 +4,14 @@
 
 namespace XKS {
 
-ResourceManager* ResourceManager::m_instance = nullptr;
+std::shared_ptr<ResourceManager> ResourceManager::GetInstance() {
+    if (m_instance == nullptr)
+        m_instance = std::make_shared<ResourceManager>();
+    return m_instance;
+}
 
 ResourceManager::ResourceManager()
         : m_texArrBlockID(-1) {
-}
-
-ResourceManager* ResourceManager::getInstance() {
-    if (m_instance == nullptr)
-        m_instance = new ResourceManager();
-
-    return m_instance;
 }
 
 ResourceManager::~ResourceManager() {
@@ -63,7 +60,7 @@ GLuint ResourceManager::loadTexture(const std::string& imagepath) {
     return textureID;
 }
 
-GLuint ResourceManager::loadTextureArray(const std::vector<std::string> imagepath) {
+GLuint ResourceManager::loadTextureArray(const std::vector<std::string>& imagepath) {
     GLuint textureID;
     glGenTextures(1, &textureID);
 

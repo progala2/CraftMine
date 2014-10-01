@@ -40,6 +40,8 @@ class MineWorld : public World {
  private:
 
     void MoveToGraphic();
+    static void BuildingChunksThreadFunction(std::weak_ptr<MineWorld>);
+    static void UpdatingChunksThreadFunction(std::weak_ptr<MineWorld>);
 
     std::shared_ptr<CubeShader> m_program;
 
@@ -49,7 +51,7 @@ class MineWorld : public World {
     glm::mat4 m_viewMatrix, m_projectionMatrix;
     GLuint m_seed;
     GLint m_distance;
-    std::unique_ptr<std::thread> m_threadBuilding[3], m_threadUpdate;
+    std::unique_ptr<std::thread> m_threadBuilding, m_threadUpdate;
     WQueue<std::shared_ptr<Chunk> > m_chunkUpdateQueue, m_chunkTransferQueue;
     WQueue<ChunksMapPair> m_chunksBuildingQueue;
 

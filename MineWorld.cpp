@@ -57,20 +57,18 @@ glm::ivec3 MineWorld::transformPositionToBlock(const glm::vec3& pos) const {
 }
 
 void MineWorld::Load() {
-    Application* application = Application::getInstance();
-    ResourceManager* resourceManager = ResourceManager::getInstance();
-
-    double time = glfwGetTime();
+    auto application = Application::getInstance();
+    auto resourceManager = ResourceManager::GetInstance();
 
     UpdateProjectionMatrix();
-    m_program = new CubeShader();
+    m_program = std::make_shared<CubeShader>();
     m_program->Attach();
     m_seed = unsigned(glfwGetTime());
     m_texturesID = resourceManager->getTextureArrID();
 
     m_player = new Player(glm::vec3(0, 84, 0));
     m_player->setDelOnMove(
-            DelegateCreatureOnMove::from_method<MineWorld, &MineWorld::onCreatureMove>(const_cast<MineWorld*>(this)));
+            DelegateCreatureOnMove::from_method<MineWorld, &MineWorld::onCreatureMove>(this->shared_from_this()));
 
     glm::ivec3 a;
     a.y = 0;
@@ -85,7 +83,7 @@ void MineWorld::Load() {
 
     for (auto it = m_chunks.begin(); it != m_chunks.end(); ++it) {
         glm::ivec3 pos(it->first);
-        Chunk* obj = it->second;
+        auto obj = it->second;
 
         --pos.x;
         auto temp = m_chunks.find(pos);
@@ -120,28 +118,11 @@ void MineWorld::Load() {
             obj->SetNeighbour(DIR_UP, temp->second);
         m_chunksBuildingQueue.Add(*it);
     }
-    for (int i = 0; i < 3; ++i)
-        m_threadBuilding[i] = new std::thread([this] {
-            for(;;)
-            {
-                while(m_chunksBuildingQueue.Size() != 0) {
-                    auto obj = m_chunksBuildingQueue.Remove();
-                    GenerateWorld(obj);
-                    m_chunkUpdateQueue.Add(obj.second);
-                }
-                while(m_chunkUpdateQueue.Size() != 0) {
-                    Chunk* obj = m_chunkUpdateQueue.Remove();
-                    obj->UpdateVertexes();
-                    m_chunkTransferQueue.Add(obj);
-                }
-                std::this_thread::sleep_for(std::chrono::microseconds(1));
-            }
 
-        });
-    for (int i = 0; i < 3; ++i) {
-        m_threadBuilding[i]->detach();
-    }
-    printf(" %Lf s", glfwGetTime() - time);
+    m_threadBuilding = std::make_shared<std::thread>(&MineWorld::BuildingChunksThreadFunction, this->shared_from_this());
+    m_threadUpdate = std::make_shared<std::thread>(&MineWorld::UpdatingChunksThreadFunction, this->shared_from_this());
+    m_threadBuilding->detach();
+    m_threadUpdate->detach();
     std::this_thread::sleep_for(std::chrono::duration<int>(1));
 }
 
@@ -155,7 +136,7 @@ void MineWorld::Unload() {
 
 void MineWorld::Update(double dt) {
     while (m_chunkTransferQueue.Size() > 0) {
-        Chunk* obj = m_chunkTransferQueue.Remove();
+        std::shared_ptr<Chunk> obj = m_chunkTransferQueue.Remove();
         obj->MoveToGraphic();
     }
     for (auto it = m_chunks.begin(); it != m_chunks.end(); ++it)
@@ -298,4 +279,30 @@ void MineWorld::onCreatureMove(const DelegateCreatureOnMoveData& info) {
     m_player->setForce(force);
 }
 
+void MineWorld::BuildingChunksThreadFunction(std::weak_ptr<MineWorld> _this) {
+    for (;;) {
+        if (auto p = _this.lock()) {
+            while (p->m_chunksBuildingQueue.Size() != 0) {
+                auto obj = p->m_chunksBuildingQueue.Remove();
+                p->GenerateWorld(obj);
+                p->m_chunkUpdateQueue.Add(obj.second);
+            }
+        }else
+            break;
+        std::this_thread::sleep_for(std::chrono::microseconds(1));
+    }
+}
+
+void MineWorld::UpdatingChunksThreadFunction(std::weak_ptr<MineWorld> _this) {
+    for (;;) {
+        if (auto p = _this.lock()) {
+            while (m_chunkUpdateQueue.Size() != 0) {
+                std::shared_ptr<Chunk> obj = p->m_chunkUpdateQueue.Remove();
+                obj->UpdateVertexes();
+                p->m_chunkTransferQueue.Add(obj);
+            }
+        }else
+            break;
+        std::this_thread::sleep_for(std::chrono::microseconds(1));
+    }
 }

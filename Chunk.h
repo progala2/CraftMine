@@ -29,7 +29,7 @@ enum VISIBLE_FACES {
 
 class Chunk {
  public:
-    Chunk(CubeShader* shader);
+    Chunk(std::shared_ptr<CubeShader> shader);
     ~Chunk();
 
     //glm::vec3 GetPosition() const {return m_position;}
@@ -38,7 +38,7 @@ class Chunk {
     void UpdateVertexes();
     void LoadChunkData(ChunkData& data);
 
-    void SetNeighbour(DIRECTIONS flag, Chunk* obj);
+    void SetNeighbour(DIRECTIONS flag, std::shared_ptr<Chunk> obj);
     void Set(GLubyte x, GLubyte y, GLubyte z, BlockTypeNumber tex);
     void Delete(GLubyte x, GLubyte y, GLubyte z);
     void ChunkModified() {
@@ -66,12 +66,12 @@ class Chunk {
 
     GLuint m_vertexVBO[DIR_LAST + 1];
     GLuint m_vertexVAO[DIR_LAST + 1];
-    Chunk* m_Neighbours[DIR_LAST + 1];
+    std::shared_ptr<Chunk> m_Neighbours[DIR_LAST + 1];
 
     ChunkData m_chunkData;
     GLubyte m_facesToDraw;
     static const glm::vec3 m_Normals[DIR_LAST + 1];
-    static CubeShader* m_program;
+    std::shared_ptr<CubeShader> m_program;
     bool m_canDrawing;
     bool m_modified;
 };

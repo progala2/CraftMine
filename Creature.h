@@ -7,10 +7,10 @@ namespace XKS {
 
 class Creature;
 struct DelegateCreatureOnMoveData {
-    Creature* creature;
+    std::weak_ptr<Creature> creature;
     GLdouble dt;
     glm::vec3 oldPos;
-    DelegateCreatureOnMoveData(Creature* cre, GLdouble _dt, glm::vec3 old)
+    DelegateCreatureOnMoveData(std::weak_ptr<Creature> cre, GLdouble _dt, glm::vec3 old)
             : creature(cre),
               dt(_dt),
               oldPos(old) {
@@ -18,7 +18,7 @@ struct DelegateCreatureOnMoveData {
 };
 typedef Delegate<DelegateCreatureOnMoveData> DelegateCreatureOnMove;
 
-class Creature {
+class Creature : public std::enable_shared_from_this<Creature> {
  protected:
     glm::vec3 m_position, m_force, m_velocity;
     GLfloat m_speed;

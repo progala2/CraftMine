@@ -16,7 +16,8 @@ enum BLOCKS {
 
 class ResourceManager {
  public:
-    static ResourceManager* getInstance();
+
+    static std::shared_ptr<ResourceManager> GetInstance();
     ~ResourceManager();
 
     void Load();
@@ -28,12 +29,13 @@ class ResourceManager {
  private:
 
     ResourceManager();
+
     GLuint m_texArrBlockID;
 
     GLuint loadTexture(const std::string& imagepath);
-    GLuint loadTextureArray(const std::vector<std::string> imagepath);
+    GLuint loadTextureArray(const std::vector<std::string>& imagepath);
 
-    static ResourceManager* m_instance;
+    std::shared_ptr<ResourceManager> m_instance;
 };
 
 }

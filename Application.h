@@ -13,15 +13,15 @@ class World;
 class Application : public OpenGLAppBase {
  public:
 
-    static Application* getInstance();
+    static std::shared_ptr<Application> getInstance();
 
-    virtual void Resize(int width, int height);
-    virtual void Draw();
-    virtual void Load();
-    virtual void Unload();
-    //Dodana metoda Update
-    virtual void Update(double dt);
-    virtual void Focus(int foc) {
+    void Resize(int width, int height);
+    void Draw();
+    void Load();
+    void Unload();
+
+    void Update(double dt);
+    void Focus(int foc) {
         m_isFocused = foc;
     }
 
@@ -41,7 +41,7 @@ class Application : public OpenGLAppBase {
         return m_FoV;
     }
 
-    virtual ~Application();
+    ~Application();
 
  private:
 
@@ -49,9 +49,10 @@ class Application : public OpenGLAppBase {
     float m_mouseSpeed;
     float m_clippingDistance, m_aspect, m_FoV;
 
-    std::unique_ptr<World> m_world;
+    std::shared_ptr<World> m_world;
+    std::shared_ptr<ResourceManager> m_resourceManager;
 
-    static Application* m_instance;
+    static std::shared_ptr<Application> m_instance;
 
     GLboolean m_isFocused;
 };

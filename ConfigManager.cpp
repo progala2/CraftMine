@@ -1,15 +1,6 @@
 #include "stdafx.h"
 #include "ConfigManager.h"
 
-ConfigManager* ConfigManager::ms_instance = nullptr;
-
-ConfigManager* ConfigManager::getInstance() {
-    if (ms_instance == nullptr)
-        ms_instance = new ConfigManager();
-
-    return ms_instance;
-}
-
 ConfigManager::ConfigManager()
         : m_genMipMap(false),
           m_clippingDistance(200),

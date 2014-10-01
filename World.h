@@ -11,7 +11,7 @@
 #include "Player.h"
 namespace XKS {
 
-class World {
+class World : public std::enable_shared_from_this<World> {
  public:
     virtual void Load() = 0;
     virtual void Unload() = 0;
@@ -24,7 +24,7 @@ class World {
         return m_gravityAcceleration;
     }
 
-    void onCreatureMove(const DelegateCreatureOnMoveData& info);
+    virtual void onCreatureMove(const DelegateCreatureOnMoveData& info) {}
 
  protected:
     float m_gravityAcceleration;
