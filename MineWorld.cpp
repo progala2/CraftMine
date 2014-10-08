@@ -4,14 +4,12 @@
 namespace XKS {
 
 MineWorld::~MineWorld() {
-    Unload();
 }
 
 void MineWorld::UpdateProjectionMatrix() {
-    Application* application = Application::getInstance();
+    MyApplication* application = MyApplication::getInstance();
     m_projectionMatrix = glm::perspective(application->GetFoV(), application->GetAspect(), 0.1f,
                                           application->GetClippingDistance());
-    m_gravityAcceleration = 9.83f;
 }
 
 void MineWorld::GenerateWorld(std::pair<const glm::ivec3, Chunk*>& chunk) {
@@ -57,8 +55,10 @@ glm::ivec3 MineWorld::transformPositionToBlock(const glm::vec3& pos) const {
 }
 
 void MineWorld::Load() {
-    auto application = Application::getInstance();
+    auto application = MyApplication::getInstance();
     auto resourceManager = ResourceManager::GetInstance();
+
+    m_gravityAcceleration = 9.83f;
 
     UpdateProjectionMatrix();
     m_program = std::make_shared<CubeShader>();
@@ -127,10 +127,6 @@ void MineWorld::Load() {
 }
 
 void MineWorld::Unload() {
-    auto end = m_chunks.end();
-    for (auto it = m_chunks.begin(); it != end; ++it) {
-        delete it->second;
-    }
     m_chunks.clear();
 }
 
@@ -147,7 +143,7 @@ void MineWorld::Update(double dt) {
 }
 
 void MineWorld::Draw() {
-    Application* application = Application::getInstance();
+    MyApplication* application = MyApplication::getInstance();
     GLenum err = glGetError();
     GLubyte flag = VSBL_FCS_ALL;
     Camera* camera = m_player->getCamera();

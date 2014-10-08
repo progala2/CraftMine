@@ -15,7 +15,7 @@ Player::~Player() {
 }
 
 void Player::Update(double dt) {
-    Application* application = Application::getInstance();
+    MyApplication* application = MyApplication::getInstance();
     double xpos, ypos;
     int width, height;
     float mouseSpeed = application->GetMouseSpeed();

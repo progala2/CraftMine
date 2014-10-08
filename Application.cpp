@@ -1,87 +1,122 @@
 #include "stdafx.h"
 #include "Application.h"
 
-namespace XKS {
 using namespace std;
+namespace XKS {
 
-std::shared_ptr<Application> Application::m_instance(nullptr);
+ApplicationWindow *ApplicationWindow::m_instance = NULL;
 
-Application::Application()
-        : m_mouseSpeed(0.1f),
-          m_world(nullptr),
-          m_resourceManager(nullptr),
-          m_isFocused(GL_TRUE),
-          m_clippingDistance(200.f),
-          m_FoV(45.f) {
-    m_aspect = m_windowWidth / static_cast<GLfloat>(m_windowHeight);
+void ApplicationWindow::WindowResizeCallback(GLFWwindow* window, int width, int height) {
+    if (m_instance)
+        m_instance->OnResize(width, height);
 }
 
-std::shared_ptr<Application> Application::getInstance() {
-    if (m_instance == nullptr)
-        m_instance = std::make_shared<Application>();
-
-    return m_instance;
+void ApplicationWindow::WindowKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    if (m_instance) {
+        m_instance->KeyAction(key, scancode, action, mods);
+    }
 }
 
-Application::~Application() {
-    Unload();
+void ApplicationWindow::WindowCloseCallback(GLFWwindow* window) {
+    if (m_instance)
+        m_instance->Destroy();
 }
 
-void Application::Load() {
-    glfwSwapInterval(0);
-
-    auto resourceManager = ResourceManager::GetInstance();
-    resourceManager->Load();
-    printf("ResourceManager Loaded");
-
-    m_world = std::make_shared<MineWorld>();
-    m_world->Load();
-    printf("World Loaded");
-
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-    glEnable(GL_POINT_SMOOTH);
-    glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
-    glEnable(GL_LINE_SMOOTH);
-    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+void ApplicationWindow::WindowFocusCallback(GLFWwindow* window, int focus) {
+    if (m_instance) {
+        m_instance->Focus(focus);
+    }
 }
 
-void Application::Unload() {
+void ApplicationWindow::WindowMouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
+    if (m_instance) {
+        m_instance->MouseAction(button, action, mods);
+    }
 }
 
-void Application::Draw() {
+void ApplicationWindow::Initialize() {
+    if (!glfwInit())
+        throw exception("Blad glfwInit!");
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    m_window = glfwCreateWindow(m_windowWidth, m_windowHeight, "OpenGL Tutorial", NULL, NULL);
+    if (m_window == nullptr)
+        throw exception("Blad glfwOpenWindow!");
+    glfwMakeContextCurrent(m_window);
+    glfwSetWindowSizeCallback(m_window, ApplicationWindow::WindowResizeCallback);
+    glfwSetWindowCloseCallback(m_window, ApplicationWindow::WindowCloseCallback);
+    glfwSetWindowFocusCallback(m_window, ApplicationWindow::WindowFocusCallback);
+    glfwSetKeyCallback(m_window, ApplicationWindow::WindowKeyCallback);
+    glfwSetMouseButtonCallback(m_window, ApplicationWindow::WindowMouseButtonCallback);
+    glewExperimental = GL_TRUE;
+    if (glewInit() != GLEW_OK)
+        throw exception("Blad glewInit!");
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    Load();
+}
+
+void ApplicationWindow::Draw() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    m_world->Draw();
     glfwSwapBuffers(m_window);
 }
 
-void Application::Update(double dt) {
-    if (m_isFocused) {
-        m_world->Update(dt);
+void ApplicationWindow::MainLoop() {
+    double lastTime = glfwGetTime();
+    int nbFrames = 0;
+    double time = glfwGetTime();
+    do {
+        Draw();
+        double newTime = glfwGetTime();
+        Update(newTime - time);
+        time = newTime;
+        // Measure speed
+
+        glfwPollEvents();
+        double currentTime = glfwGetTime();
+        nbFrames++;
+        if (currentTime - lastTime >= 1.0) {  // If last prinf() was more than 1 sec ago
+
+            // printf and reset timer
+            char str[30];
+            sprintf_s(str, 30, "%.1f frames/sec\n", nbFrames / (currentTime - lastTime));
+            glfwSetWindowTitle(m_window, str);
+            lastTime = currentTime;
+            nbFrames = 0;
+        }
+    } while (!glfwWindowShouldClose(m_window));
+}
+
+void ApplicationWindow::Run() {
+    try {
+        Initialize();
+        MainLoop();
+    } catch (exception& e) {
+        cerr << e.what() << endl;
+        system("pause");
     }
 }
 
-void Application::Resize(int width, int height) {
-    if (m_world == nullptr)
-        return;
-
-    // aspekt obrazu
-    if (height > 0)
-        m_aspect = width / static_cast<GLfloat>(height);
-
-    // parametry bry³y obcinania - rzutowanie perspektywiczne
-    m_world->UpdateProjectionMatrix();
+ApplicationWindow::ApplicationWindow()
+        : m_windowWidth(800),
+          m_windowHeight(600),
+          m_window(nullptr) {
+    if (m_instance)
+        throw exception("It can't be made another instance of this class!");
+    m_instance = this;
 }
 
-void Application::KeyAction(int key, int scancode, int action, int mods) {
-    if ((key == GLFW_KEY_ESCAPE) && action == GLFW_RELEASE) {
-        glfwSetWindowShouldClose(m_window, GL_TRUE);
-    }
+ApplicationWindow::~ApplicationWindow() {
+    m_instance = NULL;
+    Unload();
+    glfwDestroyWindow(m_window);
+    glfwTerminate();
 }
 
-void Application::MouseAction(int button, int action, int mods) {
-
-}
-
+void ApplicationWindow::OnResize(int width, int height) {
+    m_windowWidth = width;
+    m_windowHeight = height;
+    glViewport(0, 0, m_windowWidth, m_windowHeight);
+    Resize(width, height);
 }

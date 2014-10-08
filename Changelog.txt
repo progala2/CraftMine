@@ -1,5 +1,3 @@
-[version 0.1.1a]
-* changing all the raw pointers to smart one's.
 [Version 0.1.1]
 * Camera improvment, code formmating to one style and removing some raw pointers.
 [Version 0.1]

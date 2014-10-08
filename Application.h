@@ -1,62 +1,82 @@
-#ifndef _XKS_APPLICATION_H_
-#define _XKS_APPLICATION_H_
+#ifndef _XKS_OPENGL_APP_BASE_
+#define _XKS_OPENGL_APP_BASE_
 
-#include "OpenGLAppBase.h"
-#include "CubeShader.h"
-#include "World.h"
-#include "Camera.h"
-#include "ResourceManager.h"
+#include "stdafx.h"
+#include "Screen.h"
 
 namespace XKS {
 
-class World;
-class Application : public OpenGLAppBase {
+class ApplicationWindow {
  public:
+    ApplicationWindow();
 
-    static std::shared_ptr<Application> getInstance();
+    void Run(std::unique_ptr<Screen> startScreen);
 
-    void Resize(int width, int height);
-    void Draw();
-    void Load();
-    void Unload();
+    virtual ~ApplicationWindow();
 
-    void Update(double dt);
-    void Focus(int foc) {
-        m_isFocused = foc;
+    int GetKey(int key) {
+        return glfwGetKey(m_window, key);
+    }
+    void GetCursorPos(double& x, double& y) {
+        glfwGetCursorPos(m_window, &x, &y);
+    }
+    void SetCursorPos(double x, double y) {
+        glfwSetCursorPos(m_window, x, y);
+    }
+    void GetWindowWidthHeight(int& w, int& h) const {
+        w = m_windowWidth;
+        h = m_windowHeight;
     }
 
-    virtual void KeyAction(int key, int scancode, int action, int mods);
-    virtual void MouseAction(int button, int action, int mods);
-
-    float GetMouseSpeed() const {
-        return m_mouseSpeed;
-    }
-    float GetClippingDistance() const {
-        return m_clippingDistance;
-    }
-    float GetAspect() const {
-        return m_aspect;
-    }
-    float GetFoV() const {
-        return m_FoV;
+    void StartNewScreen(std::unique_ptr<Screen> newScreen) {
+        m_screen->Unload();
+        m_screen.reset(newScreen.release());
+        m_screen->Load();
     }
 
-    ~Application();
+    void CloseApplication() {
+        glfwSetWindowShouldClose(m_window, GL_TRUE);
+        m_screen->Unload();
+    }
+
+ protected:
+    virtual void Load() {
+    }
+    virtual void Unload() {
+    }
+    virtual void Resize(int width, int height) {
+    }
+    virtual void Draw();
+    virtual void Update(double dt) {
+    }
+    virtual void Focus(int) {
+    }
+
+    virtual void KeyAction(int key, int scancode, int action, int mods) {
+    }
+    virtual void MouseAction(int button, int action, int mods) {
+    }
+
+    int m_windowWidth;
+    int m_windowHeight;
 
  private:
+    void Initialize();
+    void MainLoop();
+    void OnResize(int witdth, int height);
 
-    Application();
-    float m_mouseSpeed;
-    float m_clippingDistance, m_aspect, m_FoV;
+    std::unique_ptr<Screen> m_screen;
 
-    std::shared_ptr<World> m_world;
-    std::shared_ptr<ResourceManager> m_resourceManager;
+    static void WindowResizeCallback(GLFWwindow* window, int width, int height);
+    static void WindowCloseCallback(GLFWwindow* window);
+    static void WindowFocusCallback(GLFWwindow* window, int focus);
+    static void WindowKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+    static void WindowMouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 
-    static std::shared_ptr<Application> m_instance;
+    static std::unique_ptr<ApplicationWindow> m_instance;
 
-    GLboolean m_isFocused;
+    GLFWwindow* m_window;
 };
 
 }
-
 #endif
