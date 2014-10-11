@@ -26,7 +26,7 @@ class Creature : public std::enable_shared_from_this<Creature> {
  public:
     explicit Creature(glm::vec3 pos = glm::vec3(0, 0, 0))
             : m_position(pos),
-              m_speed(2.0f),
+              m_speed(5.0f),
               m_force(0, 0, 0),
               m_velocity(0, 0, 0) {
     }

@@ -3,6 +3,8 @@
 
 using namespace glm;
 
+namespace XKS {
+
 CubeShader::CubeShader()
         : ShaderProgram("Cube_vs.glsl", "Cube_fs.glsl") {
     m_viewMatrixLoc = GetUniform("V");
@@ -31,4 +33,6 @@ void CubeShader::SetNormal(const glm::vec3& pos) {
 
 void CubeShader::SetLight(const glm::vec3& pos) {
     glUniform3fv(m_lightVectorLoc, 1, glm::value_ptr(pos));
+}
+
 }

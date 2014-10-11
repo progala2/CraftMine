@@ -1,18 +1,13 @@
 #include "stdafx.h"
 #include "MineWorld.h"
+#include "OpenGl.h"
 
 namespace XKS {
 
 MineWorld::~MineWorld() {
 }
 
-void MineWorld::UpdateProjectionMatrix() {
-    MyApplication* application = MyApplication::getInstance();
-    m_projectionMatrix = glm::perspective(application->GetFoV(), application->GetAspect(), 0.1f,
-                                          application->GetClippingDistance());
-}
-
-void MineWorld::GenerateWorld(std::pair<const glm::ivec3, Chunk*>& chunk) {
+void MineWorld::GenerateWorld(const ChunksMapPair& chunk) {
     std::srand(m_seed);
     glm::ivec3 pos(chunk.first.x * Chunk::ms_chunkSize.x, chunk.first.y * Chunk::ms_chunkSize.y,
                    chunk.first.z * Chunk::ms_chunkSize.z);
@@ -24,6 +19,8 @@ void MineWorld::GenerateWorld(std::pair<const glm::ivec3, Chunk*>& chunk) {
             glm::vec3 pos2(pos.x + x, pos.z + z, t);
             pos2 *= (s + r) * (p + t);
             int max = 20 + int(75 * glm::perlin(pos2));
+            if (max < 1)
+                max = 1;
             pos2.z = s;
             BlockTypeNumber block = BlockTypeNumber(4 * glm::perlin(pos2));
             for (GLubyte y = 0; y < max; ++y) {
@@ -55,20 +52,20 @@ glm::ivec3 MineWorld::transformPositionToBlock(const glm::vec3& pos) const {
 }
 
 void MineWorld::Load() {
-    auto application = MyApplication::getInstance();
+    auto application = ApplicationWindow::GetInstance();
     auto resourceManager = ResourceManager::GetInstance();
 
     m_gravityAcceleration = 9.83f;
 
-    UpdateProjectionMatrix();
+    OpenGL::GetInstance()->UpdateProjectionMatrix(application->GetFoV(), application->GetAspect(), 0.1f, application->GetClippingDistance());
     m_program = std::make_shared<CubeShader>();
     m_program->Attach();
     m_seed = unsigned(glfwGetTime());
     m_texturesID = resourceManager->getTextureArrID();
 
-    m_player = new Player(glm::vec3(0, 84, 0));
+    m_player = std::make_shared<Player>(glm::vec3(0, 84, 0));
     m_player->setDelOnMove(
-            DelegateCreatureOnMove::from_method<MineWorld, &MineWorld::onCreatureMove>(this->shared_from_this()));
+        DelegateCreatureOnMove::from_method<MineWorld, &MineWorld::onCreatureMove>(this->shared_from_this()));
 
     glm::ivec3 a;
     a.y = 0;
@@ -77,7 +74,7 @@ void MineWorld::Load() {
 
     for (a.z = -distance; a.z < distance; ++a.z) {
         for (a.x = -distance; a.x < distance; ++a.x) {
-            m_chunks[a] = new Chunk(m_program);
+            m_chunks[a] = std::make_shared<Chunk>(m_program);
         }
     }
 
@@ -119,8 +116,8 @@ void MineWorld::Load() {
         m_chunksBuildingQueue.Add(*it);
     }
 
-    m_threadBuilding = std::make_shared<std::thread>(&MineWorld::BuildingChunksThreadFunction, this->shared_from_this());
-    m_threadUpdate = std::make_shared<std::thread>(&MineWorld::UpdatingChunksThreadFunction, this->shared_from_this());
+    m_threadBuilding.reset(new std::thread(&MineWorld::BuildingChunksThreadFunction, this->shared_from_this()));
+    m_threadUpdate.reset(new std::thread(&MineWorld::UpdatingChunksThreadFunction, this->shared_from_this()));
     m_threadBuilding->detach();
     m_threadUpdate->detach();
     std::this_thread::sleep_for(std::chrono::duration<int>(1));
@@ -143,10 +140,10 @@ void MineWorld::Update(double dt) {
 }
 
 void MineWorld::Draw() {
-    MyApplication* application = MyApplication::getInstance();
+    auto application = ApplicationWindow::GetInstance();
     GLenum err = glGetError();
     GLubyte flag = VSBL_FCS_ALL;
-    Camera* camera = m_player->getCamera();
+    auto camera = m_player->GetCamera();
     auto dir = camera->GetDirection();
 
     GLfloat aspect = application->GetAspect();
@@ -168,8 +165,8 @@ void MineWorld::Draw() {
 
     glm::mat4 mvp = camera->LookAt();
     m_program->SetVision(mvp);
-    m_program->SetProjection(m_projectionMatrix);
-    m_program->SetLight(camera->m_pos);
+    m_program->SetProjection(OpenGL::GetInstance()->GetProjectionMatrix());
+    m_program->SetLight(glm::vec3(0, 100, 0));
 
     glm::vec3 cameraPos(camera->GetPosition());
     for (auto it = m_chunks.begin(); it != m_chunks.end(); ++it) {
@@ -253,6 +250,7 @@ void MineWorld::onCreatureMove(const DelegateCreatureOnMoveData& info) {
             if (m_chunks[chunkPos]->isSolid(blockPos.x, blockPos.y, blockPos.z)) {
                 vel.y = 0;
                 newPos2.y = oldPos.y;
+                force.y = 0;
             } else
                 force.y = -m_gravityAcceleration;
         } else
@@ -263,10 +261,10 @@ void MineWorld::onCreatureMove(const DelegateCreatureOnMoveData& info) {
     float len = glm::length(vel);
     if (vel != glm::ZERO<glm::vec3>()) {
         glm::vec3 normForce(glm::normalize(vel));
-        force -= normForce * len * len * 0.5f * 0.1f * 1.2f;
+        force -= normForce * len * len * 0.5f * 0.01f * 1.2f;
         if (!vel.y) {
-            force.x -= glm::min(normForce.x * 1.0f, vel.x);
-            force.z -= glm::min(normForce.z * 1.0f, vel.z);
+            force.x -= glm::min(normForce.x * 5.0f, vel.x);
+            force.z -= glm::min(normForce.z * 5.0f, vel.z);
         }
     }
 
@@ -292,7 +290,7 @@ void MineWorld::BuildingChunksThreadFunction(std::weak_ptr<MineWorld> _this) {
 void MineWorld::UpdatingChunksThreadFunction(std::weak_ptr<MineWorld> _this) {
     for (;;) {
         if (auto p = _this.lock()) {
-            while (m_chunkUpdateQueue.Size() != 0) {
+            while (p->m_chunkUpdateQueue.Size() != 0) {
                 std::shared_ptr<Chunk> obj = p->m_chunkUpdateQueue.Remove();
                 obj->UpdateVertexes();
                 p->m_chunkTransferQueue.Add(obj);
@@ -301,4 +299,6 @@ void MineWorld::UpdatingChunksThreadFunction(std::weak_ptr<MineWorld> _this) {
             break;
         std::this_thread::sleep_for(std::chrono::microseconds(1));
     }
+}
+
 }

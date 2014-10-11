@@ -15,18 +15,17 @@ class Player : public Creature {
     void Draw();
     void Update(double dt);
 
-    void setPosition(const glm::vec3& pos) {
+    void SetPosition(const glm::vec3& pos) {
         Creature::setPosition(pos);
-        m_camera->m_pos = pos;
-        m_camera->m_pos.y += 2;
+        m_camera->SetPosition(glm::vec3(pos.x, pos.y + 2, pos.z));
     }
 
-    Camera* getCamera() const {
+    std::shared_ptr<Camera> GetCamera() const {
         return m_camera;
     }
 
  private:
-    std::unique_ptr<Camera> m_camera;
+     std::shared_ptr<Camera> m_camera;
 };
 
 }

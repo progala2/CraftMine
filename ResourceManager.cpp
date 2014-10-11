@@ -4,22 +4,16 @@
 
 namespace XKS {
 
+std::shared_ptr<ResourceManager> ResourceManager::ms_instance = nullptr;
+
 std::shared_ptr<ResourceManager> ResourceManager::GetInstance() {
-    if (m_instance == nullptr)
-        m_instance = std::make_shared<ResourceManager>();
-    return m_instance;
+    if (ms_instance == nullptr)
+        ms_instance.reset(new ResourceManager());
+    return ms_instance;
 }
 
 ResourceManager::ResourceManager()
         : m_texArrBlockID(-1) {
-}
-
-ResourceManager::~ResourceManager() {
-    Unload();
-    m_instance = nullptr;
-}
-
-void ResourceManager::Load() {
     std::vector<std::string> tym;
 
     tym.push_back("Data\\dirt.png");
@@ -31,9 +25,10 @@ void ResourceManager::Load() {
     tym.clear();
 }
 
-void ResourceManager::Unload() {
+ResourceManager::~ResourceManager() {
     glDeleteTextures(1, &m_texArrBlockID);
     m_texArrBlockID = -1;
+    ms_instance = nullptr;
 }
 
 GLuint ResourceManager::loadTexture(const std::string& imagepath) {
@@ -74,11 +69,11 @@ GLuint ResourceManager::loadTextureArray(const std::vector<std::string>& imagepa
 
     long long* temp = new long long[width * (width >> 2) * count];
 
-    ConfigManager* cnfMngr = ConfigManager::getInstance();
+    auto cnfMngr = ConfigManager::GetInstance();
 
-    if (cnfMngr->getTextureComprType() > 0) {
+    if (cnfMngr->GetTextureComprType() > 0) {
         glHint(GL_TEXTURE_COMPRESSION_HINT, GL_NICEST);
-        if (cnfMngr->getTextureComprType() >= 2)
+        if (cnfMngr->GetTextureComprType() >= 2)
             glHint(GL_TEXTURE_COMPRESSION_HINT, GL_FASTEST);
         glTexImage3D( GL_TEXTURE_2D_ARRAY, 0, GL_COMPRESSED_RGBA, width, height, count, 0, GL_RGBA, GL_UNSIGNED_BYTE,
                      temp);
@@ -95,12 +90,12 @@ GLuint ResourceManager::loadTextureArray(const std::vector<std::string>& imagepa
     }
     delete[] image;
 
-    if (cnfMngr->isGeneratingMipMap()) {
+    if (cnfMngr->IsGeneratingMipMap()) {
         glHint(GL_GENERATE_MIPMAP_HINT, GL_NICEST);
         glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
     }
 
-    const TextureParameters txtPar = cnfMngr->getTextureParameters();
+    const TextureParameters txtPar = cnfMngr->GetTextureParameters();
 
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, txtPar.TextureMinFilter);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, txtPar.TextureMagFilter);

@@ -14,10 +14,10 @@ class Screen {
  public:
     virtual void Load() = 0;
     virtual void Unload() = 0;
-    virtual void Update(double dt) { }
-    virtual void Draw() { }
-    virtual void Resize(int width, int height) { }
+    virtual void Update(double dt) = 0;
+    virtual void Draw() = 0;
     virtual void Focus(int) { }
+    virtual void Resize(int width, int height) { }
     virtual void KeyAction(int key, int scancode, int action, int mods) { }
     virtual void MouseAction(int button, int action, int mods) { }
 };

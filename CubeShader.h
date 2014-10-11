@@ -4,6 +4,8 @@
 #include "ShaderProgram.h"
 #include "stdafx.h"
 
+namespace XKS {
+
 class CubeShader : public ShaderProgram {
  public:
     CubeShader();
@@ -23,4 +25,5 @@ class CubeShader : public ShaderProgram {
     GLint m_lightVectorLoc;
 };
 
+}
 #endif

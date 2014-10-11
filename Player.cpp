@@ -6,19 +6,19 @@ namespace XKS {
 
 Player::Player(glm::vec3 pos)
         : Creature(pos) {
-    m_camera = new Camera(pos, 45.0f);
-    m_camera->m_pos.y += 2;
+    m_camera.reset(new Camera(glm::vec3(pos.x, pos.y + 2, pos.z), 45.0f));
 }
 
 Player::~Player() {
-    delete m_camera;
 }
 
 void Player::Update(double dt) {
-    MyApplication* application = MyApplication::getInstance();
+    auto application = ApplicationWindow::GetInstance();
     double xpos, ypos;
     int width, height;
     float mouseSpeed = application->GetMouseSpeed();
+    float hAngle = m_camera->GetHAngle();
+    float vAngle = m_camera->GetVAngle();
     application->GetCursorPos(xpos, ypos);
     application->GetWindowWidthHeight(width, height);
     application->SetCursorPos(width / 2, height / 2);
@@ -27,13 +27,13 @@ void Player::Update(double dt) {
     m_force = glm::vec3(0, 0, 0);
 
     // Compute new orientation
-    m_camera->m_hAngle += mouseSpeed * float(dt * (width / 2 - xpos));
-    float y = m_camera->m_vAngle + mouseSpeed * float(dt * (height / 2 - ypos));
+    hAngle += mouseSpeed * float(dt * (width / 2 - xpos));
+    float y = vAngle + mouseSpeed * float(dt * (height / 2 - ypos));
     if (y > -1.52 && y < 1.52)
-        m_camera->m_vAngle = y;
+        vAngle = y;
+    m_camera->UpdateAngles(hAngle, vAngle);
 
-    glm::vec3 direction = glm::normalize(m_camera->GetDirection());
-    m_camera->m_dir = direction;
+    glm::vec3 direction = m_camera->GetDirection();
     glm::vec3 right = m_camera->GetRightVec();
 
     glm::vec3 newPos(0, 0, 0);
@@ -57,16 +57,19 @@ void Player::Update(double dt) {
         m_force -= right * m_speed;
     }
     if (application->GetKey(GLFW_KEY_1) == GLFW_PRESS) {
-        printf("\n%f %f %f \n", m_camera->m_dir.x, m_camera->m_dir.y, m_camera->m_dir.z);
+        const glm::vec3& dir = m_camera->GetDirection();
+        printf("\n%f %f %f \n", dir.x, dir.y, dir.z);
     }
     if (application->GetKey(GLFW_KEY_2) == GLFW_PRESS) {
-        printf("\n%f %f %f \n", m_camera->m_pos.x, m_camera->m_pos.y, m_camera->m_pos.z);
+        const glm::vec3& pos = m_camera->GetPosition();
+        printf("\n%f %f %f \n", pos.x, pos.y, pos.z);
     }
 
     newPos += m_velocity * float(dt);
-    m_position += newPos;
+    SetPosition(m_position + newPos);
 
-    m_delegateOnMove(DelegateCreatureOnMoveData(this, dt, m_position - newPos));
+    m_delegateOnMove(DelegateCreatureOnMoveData(this->shared_from_this(), dt, m_position - newPos));
+    m_camera->UpdateViewMatrix(0);
 }
 
 void Player::Draw() {

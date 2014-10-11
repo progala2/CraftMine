@@ -6,6 +6,8 @@
 #include "CubeShader.h"
 #include <bitset>
 
+namespace XKS {
+
 enum DIRECTIONS {
     DIR_FRONT = 0,
     DIR_BACK,
@@ -75,6 +77,8 @@ class Chunk {
     bool m_canDrawing;
     bool m_modified;
 };
+
+}
 
 #endif
 

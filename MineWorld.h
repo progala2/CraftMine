@@ -13,7 +13,7 @@
 
 namespace XKS {
 
-class MineWorld : public World {
+class MineWorld : public World, public std::enable_shared_from_this<MineWorld> {
  public:
     typedef std::map<glm::ivec3, std::shared_ptr<Chunk> > ChunksMap;
     typedef std::pair<const glm::ivec3, std::shared_ptr<Chunk> > ChunksMapPair;
@@ -25,7 +25,7 @@ class MineWorld : public World {
     void Update(double dt);
     void Draw();
 
-    void GenerateWorld(ChunksMapPair& chunk);
+    void GenerateWorld(const ChunksMapPair& chunk);
     glm::ivec3 transformPositionToChunk(const glm::vec3& pos) const;
     glm::ivec3 transformPositionToBlock(const glm::vec3& pos) const;
 
@@ -34,8 +34,6 @@ class MineWorld : public World {
     }
 
     void onCreatureMove(const DelegateCreatureOnMoveData& info);
-
-    void UpdateProjectionMatrix();
 
  private:
 
@@ -47,8 +45,8 @@ class MineWorld : public World {
 
     GLuint m_texturesID;
     ChunksMap m_chunks;
-    std::unique_ptr<Player> m_player;
-    glm::mat4 m_viewMatrix, m_projectionMatrix;
+    std::shared_ptr<Player> m_player;
+    glm::mat4 m_viewMatrix;
     GLuint m_seed;
     GLint m_distance;
     std::unique_ptr<std::thread> m_threadBuilding, m_threadUpdate;

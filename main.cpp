@@ -1,9 +1,9 @@
 #include "stdafx.h"
 #include "Application.h"
+#include "GameScreen.h"
 
 int main() {
-    XKS::MyApplication* appl = XKS::MyApplication::getInstance();
-    appl->Run();
-    delete appl;
+	std::shared_ptr<XKS::ApplicationWindow> appl = XKS::ApplicationWindow::GetInstance();
+	appl->Run(std::unique_ptr<XKS::Screen>(new XKS::GameScreen));
     return 0;
 }

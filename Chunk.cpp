@@ -2,6 +2,7 @@
 #include "Chunk.h"
 #include "World.h"
 
+namespace XKS {
 const glm::vec3 Chunk::m_Normals[DIR_LAST + 1] = { glm::vec3(0, 0, 1), glm::vec3(0, 0, -1), glm::vec3(0, 1, 0),
         glm::vec3(0, -1, 0), glm::vec3(-1, 0, 0), glm::vec3(1, 0, 0) };
 
@@ -269,4 +270,6 @@ void Chunk::AddFace(GLubyte x, GLubyte y, GLubyte z, GLubyte flag, BlockTypeNumb
         m_vertex[DIR_RIGHT].push_back(one);
         m_vertex[DIR_RIGHT].push_back(zero);
     }
+}
+
 }

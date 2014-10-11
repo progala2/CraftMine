@@ -2,6 +2,8 @@
 #define _XKS_CONFIGMANAGER_H_
 #include "stdafx.h"
 
+namespace XKS {
+
 struct TextureParameters {
     GLint TextureMinFilter, TextureMagFilter, TextureWrapS/*GL_CLAMP_TO_EDGE*/, TextureWrapT;
 };
@@ -9,15 +11,15 @@ struct TextureParameters {
 class ConfigManager {
  public:
 
-    static std::shared_ptr<ConfigManager> getInstance();
+    static std::shared_ptr<ConfigManager> GetInstance();
 
-    GLubyte getTextureComprType() {
+    GLubyte GetTextureComprType() {
         return m_compressedTex;
     }
-    GLboolean isGeneratingMipMap() {
+    GLboolean IsGeneratingMipMap() {
         return m_genMipMap;
     }
-    const TextureParameters& getTextureParameters() {
+    const TextureParameters& GetTextureParameters() {
         return m_texParameters;
     }
 
@@ -32,7 +34,9 @@ class ConfigManager {
     GLfloat m_mouseSpeed;
     GLfloat m_clippingDistance, m_FoV;
 
-    std::shared_ptr<ConfigManager> m_instance;
+    static std::shared_ptr<ConfigManager> ms_instance;
 };
+
+}
 
 #endif

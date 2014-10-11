@@ -1,3 +1,6 @@
+[Version 0.2]
+ * Implemented Screen system
+ * Fixed many projecting error.
 [Version 0.1.1]
 * Camera improvment, code formmating to one style and removing some raw pointers.
 [Version 0.1]

@@ -8,11 +8,15 @@ namespace XKS {
 
 class ApplicationWindow {
  public:
-    ApplicationWindow();
+	static std::shared_ptr<ApplicationWindow> GetInstance() {
+        if (ms_instance == nullptr)
+            ms_instance.reset(new ApplicationWindow());
+		return ms_instance;
+	}
 
     void Run(std::unique_ptr<Screen> startScreen);
 
-    virtual ~ApplicationWindow();
+    ~ApplicationWindow();
 
     int GetKey(int key) {
         return glfwGetKey(m_window, key);
@@ -29,7 +33,8 @@ class ApplicationWindow {
     }
 
     void StartNewScreen(std::unique_ptr<Screen> newScreen) {
-        m_screen->Unload();
+        if (m_screen != nullptr)
+            m_screen->Unload();
         m_screen.reset(newScreen.release());
         m_screen->Load();
     }
@@ -39,41 +44,54 @@ class ApplicationWindow {
         m_screen->Unload();
     }
 
- protected:
-    virtual void Load() {
-    }
-    virtual void Unload() {
-    }
-    virtual void Resize(int width, int height) {
-    }
-    virtual void Draw();
-    virtual void Update(double dt) {
-    }
-    virtual void Focus(int) {
+    float GetMouseSpeed() const {
+        return m_mouseSpeed;
     }
 
-    virtual void KeyAction(int key, int scancode, int action, int mods) {
-    }
-    virtual void MouseAction(int button, int action, int mods) {
+    float GetClippingDistance() const {
+        return m_clippingDistance;
     }
 
-    int m_windowWidth;
-    int m_windowHeight;
+    float GetAspect() const {
+        return m_aspect;
+    }
 
+    float GetFoV() const {
+        return m_FoV;
+    }
+
+    bool IsFocused() const {
+        return m_isFocused;
+    }
+	
  private:
-    void Initialize();
+    
+	ApplicationWindow();
+    void Initialize(std::unique_ptr<Screen> startScreen);
     void MainLoop();
     void OnResize(int witdth, int height);
+    void Draw();
+    void Update(double dt);
+    void Focus(int);
+    void Destroy();
+	void KeyAction(int key, int scancode, int action, int mods);
+    void MouseAction(int button, int action, int mods);
+
+	int m_windowWidth;
+    int m_windowHeight;
+	float m_mouseSpeed;
+    float m_clippingDistance, m_aspect, m_FoV;
+    bool m_isFocused;
 
     std::unique_ptr<Screen> m_screen;
-
+	
     static void WindowResizeCallback(GLFWwindow* window, int width, int height);
     static void WindowCloseCallback(GLFWwindow* window);
     static void WindowFocusCallback(GLFWwindow* window, int focus);
     static void WindowKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
     static void WindowMouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 
-    static std::unique_ptr<ApplicationWindow> m_instance;
+    static std::shared_ptr<ApplicationWindow> ms_instance;
 
     GLFWwindow* m_window;
 };

@@ -4,46 +4,49 @@
 using namespace std;
 namespace XKS {
 
-ApplicationWindow *ApplicationWindow::m_instance = NULL;
+std::shared_ptr<ApplicationWindow> ApplicationWindow::ms_instance = nullptr;
 
 void ApplicationWindow::WindowResizeCallback(GLFWwindow* window, int width, int height) {
-    if (m_instance)
-        m_instance->OnResize(width, height);
+    if (ms_instance) {
+        ms_instance->OnResize(width, height);
+		ms_instance->m_screen->Resize(width, height);
+	}
 }
 
 void ApplicationWindow::WindowKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    if (m_instance) {
-        m_instance->KeyAction(key, scancode, action, mods);
+    if (ms_instance) {
+        ms_instance->KeyAction(key, scancode, action, mods);
     }
 }
 
 void ApplicationWindow::WindowCloseCallback(GLFWwindow* window) {
-    if (m_instance)
-        m_instance->Destroy();
+    if (ms_instance) {
+        ms_instance->Destroy();
+	}
 }
 
 void ApplicationWindow::WindowFocusCallback(GLFWwindow* window, int focus) {
-    if (m_instance) {
-        m_instance->Focus(focus);
+    if (ms_instance) {
+        ms_instance->Focus(focus);
     }
 }
 
 void ApplicationWindow::WindowMouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
-    if (m_instance) {
-        m_instance->MouseAction(button, action, mods);
+    if (ms_instance) {
+        ms_instance->MouseAction(button, action, mods);
     }
 }
 
-void ApplicationWindow::Initialize() {
+void ApplicationWindow::Initialize(std::unique_ptr<Screen> startScreen) {
     if (!glfwInit())
-        throw exception("Blad glfwInit!");
+        throw exception("Error in glfwInit!");
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     m_window = glfwCreateWindow(m_windowWidth, m_windowHeight, "OpenGL Tutorial", NULL, NULL);
     if (m_window == nullptr)
-        throw exception("Blad glfwOpenWindow!");
+        throw exception("Error in glfwOpenWindow!");
     glfwMakeContextCurrent(m_window);
     glfwSetWindowSizeCallback(m_window, ApplicationWindow::WindowResizeCallback);
     glfwSetWindowCloseCallback(m_window, ApplicationWindow::WindowCloseCallback);
@@ -52,13 +55,19 @@ void ApplicationWindow::Initialize() {
     glfwSetMouseButtonCallback(m_window, ApplicationWindow::WindowMouseButtonCallback);
     glewExperimental = GL_TRUE;
     if (glewInit() != GLEW_OK)
-        throw exception("Blad glewInit!");
+        throw exception("Error in glewInit!");
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-    Load();
+    StartNewScreen(std::move(startScreen));
+}
+
+void ApplicationWindow::Update(double dt) {
+    m_screen->Update(dt);
 }
 
 void ApplicationWindow::Draw() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    m_screen->Draw();
     glfwSwapBuffers(m_window);
 }
 
@@ -88,9 +97,9 @@ void ApplicationWindow::MainLoop() {
     } while (!glfwWindowShouldClose(m_window));
 }
 
-void ApplicationWindow::Run() {
+void ApplicationWindow::Run(std::unique_ptr<Screen> startScreen) {
     try {
-        Initialize();
+        Initialize(std::move(startScreen));
         MainLoop();
     } catch (exception& e) {
         cerr << e.what() << endl;
@@ -101,15 +110,16 @@ void ApplicationWindow::Run() {
 ApplicationWindow::ApplicationWindow()
         : m_windowWidth(800),
           m_windowHeight(600),
-          m_window(nullptr) {
-    if (m_instance)
-        throw exception("It can't be made another instance of this class!");
-    m_instance = this;
+          m_window(nullptr),
+          m_mouseSpeed(0.1f),
+          m_isFocused(GL_TRUE),
+          m_clippingDistance(200.f),
+          m_FoV(45.f) {
+    m_aspect = m_windowWidth / static_cast<GLfloat>(m_windowHeight);
 }
 
 ApplicationWindow::~ApplicationWindow() {
-    m_instance = NULL;
-    Unload();
+    ms_instance = NULL;
     glfwDestroyWindow(m_window);
     glfwTerminate();
 }
@@ -118,5 +128,24 @@ void ApplicationWindow::OnResize(int width, int height) {
     m_windowWidth = width;
     m_windowHeight = height;
     glViewport(0, 0, m_windowWidth, m_windowHeight);
-    Resize(width, height);
+    if (height > 0)
+        m_aspect = width / static_cast<GLfloat>(height);
+    m_screen->Resize(width, height);
+}
+
+void ApplicationWindow::Focus(int a) {
+    m_isFocused = a != 0;
+}
+
+void ApplicationWindow::Destroy() {
+}
+
+void ApplicationWindow::KeyAction(int key, int scancode, int action, int mods) {
+    m_screen->KeyAction(key, scancode, action, mods);
+}
+
+void ApplicationWindow::MouseAction(int button, int action, int mods) {
+    m_screen->MouseAction(button, action, mods);
+}
+
 }

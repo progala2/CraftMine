@@ -6,12 +6,12 @@ template<class ParamType>
 class Delegate {
  public:
     Delegate()
-            : object_ptr(nullptr),
-              stub_ptr(0) {
+            : object_ptr(),
+              stub_ptr(nullptr) {
     }
 
     template<class T, void (T::*TMethod)(const ParamType&)>
-    static Delegate<ParamType> from_method(std::weak_ptr<T> object_ptr) {
+    static Delegate<ParamType> from_method(std::shared_ptr<T> object_ptr) {
         Delegate<ParamType> d;
         d.object_ptr = object_ptr;
         d.stub_ptr = &method_stub<T, TMethod>;  // #1

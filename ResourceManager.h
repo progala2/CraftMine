@@ -20,8 +20,6 @@ class ResourceManager {
     static std::shared_ptr<ResourceManager> GetInstance();
     ~ResourceManager();
 
-    void Load();
-    void Unload();
     GLuint getTextureArrID() {
         return m_texArrBlockID;
     }
@@ -35,7 +33,7 @@ class ResourceManager {
     GLuint loadTexture(const std::string& imagepath);
     GLuint loadTextureArray(const std::vector<std::string>& imagepath);
 
-    std::shared_ptr<ResourceManager> m_instance;
+    static std::shared_ptr<ResourceManager> ms_instance;
 };
 
 }

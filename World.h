@@ -11,7 +11,7 @@
 #include "Player.h"
 namespace XKS {
 
-class World : public std::enable_shared_from_this<World> {
+class World {
  public:
     virtual void Load() = 0;
     virtual void Unload() = 0;
