@@ -29,12 +29,24 @@ enum VISIBLE_FACES {
     VSBL_FCS_ALL = 63
 };
 
+enum class BLOCK_POINTS {
+    FLEFTUP = 0,
+    FLEFTDOWN,
+    FRIGHTUP,
+    FRIGHDOWN,
+    BLEFTUP,
+    BLEFTDOWN,
+    BRIGHTUP,
+    BRIGHDOWN,
+    CENTER
+};
+
 class Chunk {
  public:
     Chunk(std::shared_ptr<CubeShader> shader);
     ~Chunk();
 
-    //glm::vec3 GetPosition() const {return m_position;}
+    //glm::vec3 GetRealPosition(BLOCK_POINTS blck) const;
 
     void MoveToGraphic();
     void UpdateVertexes();

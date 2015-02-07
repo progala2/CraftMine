@@ -18,11 +18,14 @@ class MineWorld : public World, public std::enable_shared_from_this<MineWorld> {
     typedef std::map<glm::ivec3, std::shared_ptr<Chunk> > ChunksMap;
     typedef std::pair<const glm::ivec3, std::shared_ptr<Chunk> > ChunksMapPair;
 
+    MineWorld(): m_drawingDistance(15) {
+    }
+
     ~MineWorld();
 
     void Load();
     void Unload();
-    void Update(double dt);
+    void Update(GLdouble dt);
     void Draw();
 
     void GenerateWorld(const ChunksMapPair& chunk);
@@ -31,6 +34,14 @@ class MineWorld : public World, public std::enable_shared_from_this<MineWorld> {
 
     float getGravityAcceleration() const {
         return m_gravityAcceleration;
+    }
+
+    void setDrawingDistance(GLint dist) {
+        m_drawingDistance = dist;
+    }
+
+    GLint getDrawingDistance() {
+        return m_drawingDistance;
     }
 
     void onCreatureMove(const DelegateCreatureOnMoveData& info);
@@ -53,7 +64,8 @@ class MineWorld : public World, public std::enable_shared_from_this<MineWorld> {
     WQueue<std::shared_ptr<Chunk> > m_chunkUpdateQueue, m_chunkTransferQueue;
     WQueue<ChunksMapPair> m_chunksBuildingQueue;
 
-    float m_gravityAcceleration;
+    GLfloat m_gravityAcceleration;
+    GLint m_drawingDistance;
 };
 
 }
