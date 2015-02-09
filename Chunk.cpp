@@ -8,11 +8,12 @@ const glm::vec3 Chunk::m_Normals[DIR_LAST + 1] = { glm::vec3(0, 0, 1), glm::vec3
 
 const glm::ivec3 Chunk::ms_chunkSize(16, 255, 16);
 
-Chunk::Chunk(std::shared_ptr<CubeShader> shader)
+Chunk::Chunk(std::shared_ptr<CubeShader> shader, const glm::vec3& position)
         : m_canDrawing(false),
           m_modified(false),
           m_facesToDraw(VSBL_FCS_ALL),
-          m_program(shader) {
+          m_program(shader),
+          m_position(position) {
     GLenum err = glGetError();
     int attrib[2] = { m_program->GetAttrib("in_Position"), m_program->GetAttrib("vertexUV") };
     GLsizei vSize = sizeof(VertPosTexCompressed);
@@ -77,6 +78,8 @@ void Chunk::MoveToGraphic() {
         }
         m_lastSize[i] = m_vertex[i].size();
         m_vertex[i].clear();
+        m_vertex[i].resize(1);
+        m_vertex[i].shrink_to_fit();
     }
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     m_canDrawing = true;

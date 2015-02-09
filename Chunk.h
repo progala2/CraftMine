@@ -43,10 +43,10 @@ enum class BLOCK_POINTS {
 
 class Chunk {
  public:
-    Chunk(std::shared_ptr<CubeShader> shader);
+     Chunk(std::shared_ptr<CubeShader> shader, const glm::vec3& position);
     ~Chunk();
 
-    //glm::vec3 GetRealPosition(BLOCK_POINTS blck) const;
+    glm::vec3 GetPosition() const { return m_position; }
 
     void MoveToGraphic();
     void UpdateVertexes();
@@ -74,7 +74,7 @@ class Chunk {
     static const glm::ivec3 ms_chunkSize;
 
  private:
-    //glm::vec3 m_position;
+    glm::vec3 m_position;
     std::vector<VertPosTexCompressed> m_vertex[DIR_LAST + 1];
     int m_lastSize[DIR_LAST + 1];
 

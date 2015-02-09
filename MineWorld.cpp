@@ -74,7 +74,7 @@ void MineWorld::Load() {
 
     for (a.z = -distance; a.z < distance; ++a.z) {
         for (a.x = -distance; a.x < distance; ++a.x) {
-            m_chunks[a] = std::make_shared<Chunk>(m_program);
+            m_chunks[a] = std::make_shared<Chunk>(m_program, glm::vec3(a.x * Chunk::ms_chunkSize.x, 0, a.z * Chunk::ms_chunkSize.z));
         }
     }
 
@@ -165,6 +165,7 @@ void MineWorld::Draw() {
         flag ^= VSBL_FCS_BACK;
     if (dir.z > 0.5 * aspect)
         flag ^= VSBL_FCS_FRONT;
+
     m_program->Attach();
     glBindTexture(GL_TEXTURE_2D_ARRAY, m_texturesID);
 
@@ -179,56 +180,41 @@ void MineWorld::Draw() {
     // Let's draw all the chunks
     int i = 0;
     for (auto it = m_chunks.begin(); it != m_chunks.end(); ++it) {
-        // Making real chunk position 
+        // Making real chunk position
+        auto chunkPos = it->second->GetPosition();
         glm::vec4 pos[4] = {
-            glm::vec4((it->first.x) * Chunk::ms_chunkSize.x, cameraPos.y, (it->first.z) * Chunk::ms_chunkSize.z, 1),
-            glm::vec4((it->first.x) * Chunk::ms_chunkSize.x + Chunk::ms_chunkSize.x, cameraPos.y, (it->first.z) * Chunk::ms_chunkSize.z + Chunk::ms_chunkSize.z, 1),
-            glm::vec4((it->first.x) * Chunk::ms_chunkSize.x, cameraPos.y, (it->first.z) * Chunk::ms_chunkSize.z + Chunk::ms_chunkSize.z, 1),
-            glm::vec4((it->first.x) * Chunk::ms_chunkSize.x + Chunk::ms_chunkSize.x, cameraPos.y, (it->first.z) * Chunk::ms_chunkSize.z, 1),
+            glm::vec4(chunkPos.x, cameraPos.y, chunkPos.z, 1),
+            glm::vec4(chunkPos.x + Chunk::ms_chunkSize.x, cameraPos.y, chunkPos.z + Chunk::ms_chunkSize.z, 1),
+            glm::vec4(chunkPos.x, cameraPos.y, chunkPos.z + Chunk::ms_chunkSize.z, 1),
+            glm::vec4(chunkPos.x + Chunk::ms_chunkSize.x, cameraPos.y, chunkPos.z, 1),
         };
 
         // distance from camera
         glm::vec4 cpVec = pos[0] - cameraPos;
 
-        GLfloat length = std::max(cpVec.x < 0 ? -(cpVec.x + 15) : cpVec.x, cpVec.z < 0 ? -(cpVec.z + 15) : cpVec.z);
-        if (length > application->GetClippingDistance() + 7)
-            continue;
+        auto clipDist = application->GetClippingDistance();
 
-        bool cont = true;
-        for (int j = 0; j < 4 && cont; ++j) {
-            cpVec = glm::normalize(pos[j] - cameraPos);
+        bool cont[] = {true, true};
+        for (int j = 0; j < 4; ++j) {
+            cpVec = pos[j] - cameraPos;
+            if (clipDist > glm::length(cpVec))
+                cont[0] = false;
+
+            cpVec = glm::normalize(cpVec);
             auto angle = glm::acos(glm::dot(cpVec, dir));
             if (angle <= glm::half_pi<float>() && angle >= -glm::half_pi<float>())
-                cont = false;
+                cont[1] = false;
         }
 
-        if (cont)
+        if (cont[0] || cont[1])
             continue;
-        
-
-        /*for (int j = 0; j < 4; ++j) {
-            pos[j].y = std::min(0.0f, cameraPos.y + dir.y * glm::length(cpVec));
-            //pos[j].x = pos[j].x + 16*
-        }
-
-        bool cont = true;
-        for (int j = 0; j < 4 && cont; ++j) {
-            auto cameraViewPos = mvp * pos[j];
-            cameraViewPos /=cameraViewPos.w;
-            if (cameraViewPos.z < 0)
-                cont = false;
-            if (cameraViewPos.x <= 1.0f && cameraViewPos.x >= -1.0f && cameraViewPos.y <= 1.0f && cameraViewPos.y >= -1.0f)
-                cont = false;
-        }
-        if (cont)
-            continue;*/
 
         GLubyte cflag = VSBL_FCS_ALL;
-        if (pos[0].x < cameraPos.x - Chunk::ms_chunkSize.x)
+        if (pos[1].x < cameraPos.x)
             cflag ^= VSBL_FCS_LEFT;
         if (pos[0].x > cameraPos.x)
             cflag ^= VSBL_FCS_RIGHT;
-        if (pos[0].z < cameraPos.z - Chunk::ms_chunkSize.z)
+        if (pos[1].z < cameraPos.z)
             cflag ^= VSBL_FCS_BACK;
         if (pos[0].z > cameraPos.z)
             cflag ^= VSBL_FCS_FRONT;

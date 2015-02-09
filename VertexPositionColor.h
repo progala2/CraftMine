@@ -44,6 +44,9 @@ struct VertPosTexCompressed {
               m_texture(tex) {
     }
 
+    VertPosTexCompressed() {
+    }
+
     Vec3ub m_position;
     Vec2us m_texture;
 
