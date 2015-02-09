@@ -19,13 +19,6 @@ void GameScreen::Load() {
     m_world = std::make_shared<MineWorld>();
     m_world->Load();
     printf("World Loaded \n");
-
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-    glEnable(GL_POINT_SMOOTH);
-    glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
-    glEnable(GL_LINE_SMOOTH);
-    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 }
 
 void GameScreen::Unload() {

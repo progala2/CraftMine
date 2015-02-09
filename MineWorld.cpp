@@ -143,8 +143,6 @@ GLuint time = 0;
 void MineWorld::Draw() {
     auto application = ApplicationWindow::GetInstance();
     GLenum err = glGetError();
-    if (err != GL_NO_ERROR)
-        std::cout << err;
     GLubyte flag = VSBL_FCS_ALL;
     auto camera = m_player->GetCamera();
     glm::vec4 dir = glm::vec4(camera->GetDirection(), 0);
@@ -179,36 +177,57 @@ void MineWorld::Draw() {
     glm::vec4 cameraPos(camera->GetPosition(), 1);
     // Let's draw all the chunks
     int i = 0;
+    auto fov = glm::radians(application->GetFoV());
     for (auto it = m_chunks.begin(); it != m_chunks.end(); ++it) {
         // Making real chunk position
         auto chunkPos = it->second->GetPosition();
-        glm::vec4 pos[4] = {
-            glm::vec4(chunkPos.x, cameraPos.y, chunkPos.z, 1),
-            glm::vec4(chunkPos.x + Chunk::ms_chunkSize.x, cameraPos.y, chunkPos.z + Chunk::ms_chunkSize.z, 1),
-            glm::vec4(chunkPos.x, cameraPos.y, chunkPos.z + Chunk::ms_chunkSize.z, 1),
+        glm::vec4 pos[8] = {
+            glm::vec4(chunkPos.x, 0, chunkPos.z, 1),
+            glm::vec4(chunkPos.x + Chunk::ms_chunkSize.x, 0, chunkPos.z + Chunk::ms_chunkSize.z, 1),
+            glm::vec4(chunkPos.x, 0, chunkPos.z + Chunk::ms_chunkSize.z, 1),
             glm::vec4(chunkPos.x + Chunk::ms_chunkSize.x, cameraPos.y, chunkPos.z, 1),
+            glm::vec4(chunkPos.x, 255, chunkPos.z, 1),
+            glm::vec4(chunkPos.x + Chunk::ms_chunkSize.x, 255, chunkPos.z + Chunk::ms_chunkSize.z, 1),
+            glm::vec4(chunkPos.x, 255, chunkPos.z + Chunk::ms_chunkSize.z, 1),
+            glm::vec4(chunkPos.x + Chunk::ms_chunkSize.x, 255, chunkPos.z, 1),
         };
 
-        // distance from camera
-        glm::vec4 cpVec = pos[0] - cameraPos;
+        glm::vec4 cpVec[8] = {
+            pos[0] - cameraPos,
+            pos[1] - cameraPos,
+            pos[2] - cameraPos,
+            pos[3] - cameraPos,
+            pos[4] - cameraPos,
+            pos[5] - cameraPos,
+            pos[6] - cameraPos,
+            pos[7] - cameraPos,
+        };
 
         auto clipDist = application->GetClippingDistance();
 
-        bool cont[] = {true, true};
-        for (int j = 0; j < 4; ++j) {
-            cpVec = pos[j] - cameraPos;
-            if (clipDist > glm::length(cpVec))
-                cont[0] = false;
-
-            cpVec = glm::normalize(cpVec);
-            auto angle = glm::acos(glm::dot(cpVec, dir));
-            if (angle <= glm::half_pi<float>() && angle >= -glm::half_pi<float>())
-                cont[1] = false;
+        bool cont = true;
+        for (int j = 0; j < 8; ++j) {
+            if (clipDist > glm::length(cpVec[j]))
+                cont = false;
         }
-
-        if (cont[0] || cont[1])
+        if (cont)
             continue;
 
+        float angles[8];
+        for (int j = 0; j < 8; ++j) {
+            cpVec[j] = glm::normalize(cpVec[j]);
+            angles[j] = glm::acos(glm::dot(cpVec[j], dir));
+        }
+        
+        cont = true;
+        for (int j = 0; j < 8; ++j) {
+            if (angles[j] < fov)
+                cont = false;
+        }
+
+        if (cont)
+            continue;
+        
         GLubyte cflag = VSBL_FCS_ALL;
         if (pos[1].x < cameraPos.x)
             cflag ^= VSBL_FCS_LEFT;
