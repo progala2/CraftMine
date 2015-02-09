@@ -208,14 +208,19 @@ void MineWorld::Draw() {
         cont = true;
         for (int j = 0; j < 8; ++j) {
             if (pos[j].z <= pos[j].w)
-
-        cont = true;
-        for (int j = 0; j < 8; ++j) {
-            cpVec[j] = glm::normalize(cpVec[j]);
-            angles[j] = glm::acos(glm::dot(cpVec[j], dir));
+                cont = false;
         }
         if (cont) 
             continue;
+        
+        cont = true;
+        for (int j = 0; j < 8; ++j) {
+            if (pos[j].x >= -pos[j].w)
+                cont = false;
+        }
+        if (cont)
+            continue;
+
         cont = true;
         for (int j = 0; j < 8; ++j) {
             if (pos[j].x <= pos[j].w)
