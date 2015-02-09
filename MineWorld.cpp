@@ -60,7 +60,7 @@ void MineWorld::Load() {
     OpenGL::GetInstance()->UpdateProjectionMatrix(application->GetFoV(), application->GetAspect(), 0.1f, application->GetClippingDistance());
     m_program = std::make_shared<CubeShader>();
     m_program->Attach();
-    m_seed = unsigned(10);
+    m_seed = unsigned(4);
     m_texturesID = resourceManager->getTextureArrID();
 
     m_player = std::make_shared<Player>(glm::vec3(0, 84, 0));
@@ -167,11 +167,11 @@ void MineWorld::Draw() {
     m_program->Attach();
     glBindTexture(GL_TEXTURE_2D_ARRAY, m_texturesID);
 
-    glm::mat4 mvp = camera->LookAt();
-    m_program->SetVision(mvp);
+    glm::mat4 mView = camera->LookAt();
+    m_program->SetVision(mView);
     auto projection = OpenGL::GetInstance()->GetProjectionMatrix();
     m_program->SetProjection(projection);
-    mvp = projection * mvp;
+    auto mvp = projection * mView;
     m_program->SetLight(glm::vec3(0, 100, 0));
 
     glm::vec4 cameraPos(camera->GetPosition(), 1);
@@ -180,68 +180,78 @@ void MineWorld::Draw() {
     auto fov = glm::radians(application->GetFoV());
     for (auto it = m_chunks.begin(); it != m_chunks.end(); ++it) {
         // Making real chunk position
+        auto clipDist = application->GetClippingDistance();
         auto chunkPos = it->second->GetPosition();
-        glm::vec4 pos[8] = {
+        glm::vec4 pos[] = {
             glm::vec4(chunkPos.x, 0, chunkPos.z, 1),
             glm::vec4(chunkPos.x + Chunk::ms_chunkSize.x, 0, chunkPos.z + Chunk::ms_chunkSize.z, 1),
             glm::vec4(chunkPos.x, 0, chunkPos.z + Chunk::ms_chunkSize.z, 1),
-            glm::vec4(chunkPos.x + Chunk::ms_chunkSize.x, cameraPos.y, chunkPos.z, 1),
+            glm::vec4(chunkPos.x + Chunk::ms_chunkSize.x, 0, chunkPos.z, 1),
             glm::vec4(chunkPos.x, 255, chunkPos.z, 1),
             glm::vec4(chunkPos.x + Chunk::ms_chunkSize.x, 255, chunkPos.z + Chunk::ms_chunkSize.z, 1),
             glm::vec4(chunkPos.x, 255, chunkPos.z + Chunk::ms_chunkSize.z, 1),
             glm::vec4(chunkPos.x + Chunk::ms_chunkSize.x, 255, chunkPos.z, 1),
         };
 
-        glm::vec4 cpVec[8] = {
-            pos[0] - cameraPos,
-            pos[1] - cameraPos,
-            pos[2] - cameraPos,
-            pos[3] - cameraPos,
-            pos[4] - cameraPos,
-            pos[5] - cameraPos,
-            pos[6] - cameraPos,
-            pos[7] - cameraPos,
-        };
-
-        auto clipDist = application->GetClippingDistance();
+        for (int j = 0; j < 8; ++j) {
+            pos[j] = mvp * pos[j];
+        }
 
         bool cont = true;
         for (int j = 0; j < 8; ++j) {
-            if (clipDist > glm::length(cpVec[j]))
+            if (pos[j].z >= -pos[j].w)
                 cont = false;
         }
-        if (cont)
+        if (cont) 
             continue;
 
-        float angles[8];
+        cont = true;
+        for (int j = 0; j < 8; ++j) {
+            if (pos[j].z <= pos[j].w)
+
+        cont = true;
         for (int j = 0; j < 8; ++j) {
             cpVec[j] = glm::normalize(cpVec[j]);
             angles[j] = glm::acos(glm::dot(cpVec[j], dir));
         }
-        
+        if (cont) 
+            continue;
         cont = true;
         for (int j = 0; j < 8; ++j) {
-            if (angles[j] < fov)
+            if (pos[j].x <= pos[j].w)
                 cont = false;
         }
-
         if (cont)
             continue;
-        
+
+        cont = true;
+        for (int j = 0; j < 8; ++j) {
+            if (pos[j].y >= -pos[j].w)
+                cont = false;
+        }
+        if (cont)
+            continue;
+
+        cont = true;
+        for (int j = 0; j < 8; ++j) {
+            if (pos[j].y <= pos[j].w)
+                cont = false;
+        }
+        if (cont)
+            continue;
         GLubyte cflag = VSBL_FCS_ALL;
-        if (pos[1].x < cameraPos.x)
+        if (chunkPos.x + Chunk::ms_chunkSize.x < cameraPos.x)
             cflag ^= VSBL_FCS_LEFT;
-        if (pos[0].x > cameraPos.x)
+        if (chunkPos.x > cameraPos.x)
             cflag ^= VSBL_FCS_RIGHT;
-        if (pos[1].z < cameraPos.z)
+        if (chunkPos.z + Chunk::ms_chunkSize.z < cameraPos.z)
             cflag ^= VSBL_FCS_BACK;
-        if (pos[0].z > cameraPos.z)
+        if (chunkPos.z > cameraPos.z)
             cflag ^= VSBL_FCS_FRONT;
         it->second->SetFacesToDraw(flag & cflag);
 
         ++i;
-        pos[0].y = 0;
-        m_program->SetWorldPos(glm::vec3(pos[0]));
+        m_program->SetWorldPos(chunkPos);
         it->second->Draw();
     }
     if (time == 100) {
