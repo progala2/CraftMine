@@ -26,7 +26,7 @@ class OpenGL {
      }
 
      void UpdateProjectionMatrix(const float& FoV, const float& aspect, const float& zNear, const float& clippingDistance) {
-         m_projectionMatrix = glm::infinitePerspective(FoV, aspect, zNear);
+         m_projectionMatrix = glm::perspective(FoV, aspect, zNear, clippingDistance);
      }
 
      const glm::mat4& GetProjectionMatrix() const {

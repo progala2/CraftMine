@@ -60,7 +60,7 @@ void MineWorld::Load() {
     OpenGL::GetInstance()->UpdateProjectionMatrix(application->GetFoV(), application->GetAspect(), 0.1f, application->GetClippingDistance());
     m_program = std::make_shared<CubeShader>();
     m_program->Attach();
-    m_seed = unsigned(10);
+    m_seed = unsigned(4);
     m_texturesID = resourceManager->getTextureArrID();
 
     m_player = std::make_shared<Player>(glm::vec3(0, 84, 0));
@@ -188,32 +188,19 @@ void MineWorld::Draw() {
             glm::vec4(chunkPos.x + Chunk::ms_chunkSize.x, 0, chunkPos.z + Chunk::ms_chunkSize.z, 1),
             glm::vec4(chunkPos.x, 0, chunkPos.z + Chunk::ms_chunkSize.z, 1),
             glm::vec4(chunkPos.x + Chunk::ms_chunkSize.x, 0, chunkPos.z, 1),
-            glm::vec4(chunkPos.x, clipDist*0.5, chunkPos.z, 1),
-            glm::vec4(chunkPos.x + Chunk::ms_chunkSize.x, clipDist*0.5, chunkPos.z + Chunk::ms_chunkSize.z, 1),
-            glm::vec4(chunkPos.x, clipDist*0.5, chunkPos.z + Chunk::ms_chunkSize.z, 1),
-            glm::vec4(chunkPos.x + Chunk::ms_chunkSize.x, clipDist*0.5, chunkPos.z, 1),
+            glm::vec4(chunkPos.x, 255, chunkPos.z, 1),
+            glm::vec4(chunkPos.x + Chunk::ms_chunkSize.x, 255, chunkPos.z + Chunk::ms_chunkSize.z, 1),
+            glm::vec4(chunkPos.x, 255, chunkPos.z + Chunk::ms_chunkSize.z, 1),
+            glm::vec4(chunkPos.x + Chunk::ms_chunkSize.x, 255, chunkPos.z, 1),
         };
 
         for (int j = 0; j < 8; ++j) {
-            pos[j] = mView * pos[j];
-        }    
+            pos[j] = mvp * pos[j];
+        }
 
         bool cont = true;
         for (int j = 0; j < 8; ++j) {
-            if (-pos[j].z > 0 && -pos[j].z < clipDist)
-                cont = false;
-        }
-        if (cont)
-            continue;
-
-        for (int j = 0; j < 8; ++j) {
-            pos[j] = projection * pos[j];
-            pos[j] /= pos[j].w;
-        }
-
-        cont = true;
-        for (int j = 0; j < 8; ++j) {
-            if (pos[j].x >= -1.001f)
+            if (pos[j].z >= -pos[j].w)
                 cont = false;
         }
         if (cont) 
@@ -221,7 +208,7 @@ void MineWorld::Draw() {
 
         cont = true;
         for (int j = 0; j < 8; ++j) {
-            if (pos[j].x <= 1.001f)
+            if (pos[j].z <= pos[j].w)
                 cont = false;
         }
         if (cont)
@@ -229,7 +216,15 @@ void MineWorld::Draw() {
 
         cont = true;
         for (int j = 0; j < 8; ++j) {
-            if (pos[j].y >= -1.001f)
+            if (pos[j].x >= -pos[j].w)
+                cont = false;
+        }
+        if (cont) 
+            continue;
+
+        cont = true;
+        for (int j = 0; j < 8; ++j) {
+            if (pos[j].x <= pos[j].w)
                 cont = false;
         }
         if (cont)
@@ -237,7 +232,15 @@ void MineWorld::Draw() {
 
         cont = true;
         for (int j = 0; j < 8; ++j) {
-            if (pos[j].y <= 1.001f)
+            if (pos[j].y >= -pos[j].w)
+                cont = false;
+        }
+        if (cont)
+            continue;
+
+        cont = true;
+        for (int j = 0; j < 8; ++j) {
+            if (pos[j].y <= pos[j].w)
                 cont = false;
         }
         if (cont)

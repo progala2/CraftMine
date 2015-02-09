@@ -113,7 +113,7 @@ ApplicationWindow::ApplicationWindow()
           m_window(nullptr),
           m_mouseSpeed(0.1f),
           m_isFocused(GL_TRUE),
-          m_clippingDistance(20.f),
+          m_clippingDistance(200.f),
           m_FoV(45.f) {
     m_aspect = m_windowWidth / static_cast<GLfloat>(m_windowHeight);
 }
