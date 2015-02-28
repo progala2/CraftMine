@@ -14,7 +14,7 @@ GameScreen::~GameScreen() {
 }
 
 void GameScreen::Load() {
-    glfwSwapInterval(0);
+    
 
     m_world = std::make_shared<MineWorld>();
     m_world->Load();

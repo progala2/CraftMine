@@ -48,6 +48,7 @@ void ApplicationWindow::Initialize(std::unique_ptr<Screen> startScreen) {
     if (m_window == nullptr)
         throw exception("Error in glfwOpenWindow!");
     glfwMakeContextCurrent(m_window);
+    glfwSwapInterval(1);
     glfwSetWindowSizeCallback(m_window, ApplicationWindow::WindowResizeCallback);
     glfwSetWindowCloseCallback(m_window, ApplicationWindow::WindowCloseCallback);
     glfwSetWindowFocusCallback(m_window, ApplicationWindow::WindowFocusCallback);
